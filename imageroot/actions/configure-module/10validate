@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+import json
+import sys
+import agent
+import os
+
+data = json.load(sys.stdin)
+errors = []
+
+# Validate host (FQDN)
+host = data.get('host', '').strip()
+if not host:
+    errors.append({'field': 'host', 'error': 'host_required'})
+elif not agent.is_valid_hostname(host):
+    errors.append({'field': 'host', 'value': host, 'error': 'invalid_hostname'})
+else:
+    # Check if FQDN is already used by another Traefik route not belonging to this module
+    try:
+        response = agent.tasks.run(
+            agent_id=agent.resolve_agent_id('traefik@node'),
+            action='list-routes',
+            data={},
+        )
+        if response.get('exit_code') == 0:
+            existing_routes = response.get('output', {})
+            module_id = os.environ.get('MODULE_ID', '')
+            for route_id, route_info in existing_routes.items():
+                if route_info.get('host') == host and module_id not in route_id:
+                    errors.append({'field': 'host', 'value': host, 'error': 'hostname_already_used'})
+                    break
+    except Exception as e:
+        print(f"Warning: Could not check existing routes: {e}", file=sys.stderr)
+
+# Validate path prefix
+path = data.get('path', '').strip()
+if path and not path.startswith('/'):
+    errors.append({'field': 'path', 'value': path, 'error': 'path_must_start_with_slash'})
+
+if errors:
+    agent.set_status('validation-failed')
+    json.dump(errors, fp=sys.stdout)
+    sys.exit(2)
+else:
+    agent.set_status('validation-passed')

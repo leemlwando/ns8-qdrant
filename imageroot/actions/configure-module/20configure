@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import json
+import sys
+import agent
+import os
+
+data = json.load(sys.stdin)
+
+# Setup variables from user input
+host = data.get('host', '')
+path = data.get('path', '')
+lets_encrypt = data.get('lets_encrypt', False)
+http2https = data.get('http2https', False)
+
+# Set environment variables for the module
+agent.set_env('QDRANT_HOST', host)
+agent.set_env('QDRANT_PATH', path)
+agent.set_env('QDRANT_LETS_ENCRYPT', str(lets_encrypt).lower())
+agent.set_env('QDRANT_HTTP2HTTPS', str(http2https).lower())
+
+# Configure Traefik route by calling the traefik agent
+route_data = {
+    'instance': os.environ['MODULE_ID'],
+    'url': f'http://127.0.0.1:{os.environ["TCP_PORT_1"]}',
+    'host': host,
+    'lets_encrypt': lets_encrypt,
+    'http2https': http2https,
+}
+if path:
+    route_data['path'] = path
+
+response = agent.tasks.run(
+    agent_id=agent.resolve_agent_id('traefik@node'),
+    action='set-route',
+    data=route_data,
+)
+
+agent.assert_exp(response['exit_code'] == 0, f"Failed to set traefik route: {response.get('error')}")
+
+# Gently restart the service to ensure it's running, though not strictly needed for route changes
+agent.run_helper('systemctl', '--user', 'restart', 'qdrant.service')

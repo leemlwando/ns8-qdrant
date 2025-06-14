@@ -1,0 +1,31 @@
+[Unit]
+Description=Qdrant vector database
+After=network.target
+
+[Service]
+Environment=PODMAN_SYSTEMD_UNIT=%n
+EnvironmentFile=%S/state/environment
+Restart=always
+RestartSec=5s
+TimeoutStopSec=70
+KillMode=mixed
+Type=notify
+NotifyAccess=all
+PIDFile=%t/%n.pid
+ExecStartPre=/bin/rm -f %t/%n.pid %t/%n.ctr-id
+ExecStart=/usr/bin/podman run \
+    --detach \
+    --conmon-pidfile=%t/%n.pid \
+    --cidfile=%t/%n.ctr-id \
+    --cgroups=no-conmon \
+    --replace --name=%N \
+    --publish=127.0.0.1:${TCP_PORT_0}:6333 \
+    --publish=127.0.0.1:${TCP_PORT_1}:6334 \
+    --volume=qdrant-data:/qdrant/storage:Z \
+    ${QDRANT_IMAGE}
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%n.ctr-id -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%n.ctr-id
+SyslogIdentifier=%N
+
+[Install]
+WantedBy=default.target
