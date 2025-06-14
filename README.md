@@ -1,4 +1,4 @@
-# NethServer 8 Qdrant Module
+# NethServer 8 Qdrant Module By MicroTech
 
 This module deploys the [Qdrant Vector Database](https://qdrant.tech/) on NethServer 8.
 
