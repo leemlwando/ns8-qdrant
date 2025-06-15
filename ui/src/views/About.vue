@@ -40,12 +40,11 @@
           <div v-else>
             <section>
               <div class="logo-and-name">
-                <div class="app-logo">
-                  <img
+                <div class="app-logo">                  <img
                     :src="
                       app.logo
                         ? app.logo
-                        : require('@/assets/module_default_logo.png')
+                        : require('@/assets/module_default_logo.svg')
                     "
                     :alt="app.name + ' logo'"
                   />
