@@ -23,4 +23,13 @@ module.exports = {
         return options;
       });
   },
+  css: {
+    loaderOptions: {
+      sass: {
+        sassOptions: {
+          quietDeps: true, // Silences deprecation warnings from dependencies
+        },
+      },
+    },
+  },
 };
