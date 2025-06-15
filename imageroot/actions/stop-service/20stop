@@ -6,7 +6,7 @@ import subprocess
 
 try:
     subprocess.run([
-        'systemctl', '--user', 'stop', 'qdrant'
+        'systemctl', '--user', 'stop', 'qdrant.service'
     ], check=True)
     
     json.dump({"service_stopped": True}, fp=sys.stdout)

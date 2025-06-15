@@ -4,6 +4,8 @@ import json
 import sys
 import requests
 import os
+import subprocess
+import time
 
 # Read input data
 data = json.load(sys.stdin)
@@ -13,10 +15,40 @@ host = 'localhost'
 port = int(data.get('port', 6333))
 api_key = data.get('api_key', '')
 
+def check_service_status():
+    """Check if Qdrant systemd service is running"""
+    try:
+        result = subprocess.run(['systemctl', '--user', 'is-active', 'qdrant.service'], 
+                              capture_output=True, text=True)
+        return result.returncode == 0 and result.stdout.strip() == 'active'
+    except:
+        return False
+
+def wait_for_service(max_wait=30):
+    """Wait for Qdrant service to be ready"""
+    for i in range(max_wait):
+        if check_service_status():
+            time.sleep(2)  # Give it a moment to fully start
+            return True
+        time.sleep(1)
+    return False
+
 try:
+    # Check if service is running
+    if not check_service_status():
+        print("Qdrant service is not running, attempting to start...", file=sys.stderr)
+        subprocess.run(['systemctl', '--user', 'start', 'qdrant.service'], check=False)
+        
+        if not wait_for_service():
+            json.dump({
+                "connection_successful": False,
+                "error": "Qdrant service failed to start"
+            }, fp=sys.stdout)
+            sys.exit(1)
+
     headers = {}
     if api_key:
-        headers['Authorization'] = f'Bearer {api_key}'
+        headers['api-key'] = api_key
     
     # Test connection to Qdrant
     response = requests.get(
@@ -29,18 +61,21 @@ try:
         result = response.json()
         json.dump({
             "connection_successful": True,
-            "qdrant_version": result.get('result', {}).get('version', 'unknown')
+            "qdrant_version": result.get('result', {}).get('version', 'unknown'),
+            "service_status": "running"
         }, fp=sys.stdout)
     else:
         json.dump({
             "connection_successful": False,
-            "error": f"HTTP {response.status_code}: {response.text}"
+            "error": f"HTTP {response.status_code}: {response.text}",
+            "service_status": "running" if check_service_status() else "stopped"
         }, fp=sys.stdout)
         sys.exit(1)
 
 except requests.exceptions.RequestException as e:
     json.dump({
         "connection_successful": False,
-        "error": str(e)
+        "error": str(e),
+        "service_status": "running" if check_service_status() else "stopped"
     }, fp=sys.stdout)
     sys.exit(1)

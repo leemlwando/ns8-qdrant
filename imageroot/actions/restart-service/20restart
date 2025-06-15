@@ -6,7 +6,7 @@ import subprocess
 
 try:
     subprocess.run([
-        'systemctl', '--user', 'restart', 'qdrant'
+        'systemctl', '--user', 'restart', 'qdrant.service'
     ], check=True)
     
     json.dump({"service_restarted": True}, fp=sys.stdout)

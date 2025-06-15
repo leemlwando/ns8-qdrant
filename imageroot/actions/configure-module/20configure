@@ -43,6 +43,21 @@ agent.dump_env()
 with open('config.json', 'w') as config_file:
     json.dump(data, config_file, indent=2)
 
+# Pull Qdrant image if not already present
+qdrant_image = os.environ.get('QDRANT_IMAGE', 'docker.io/qdrant/qdrant:latest')
+print(f"Pulling Qdrant image: {qdrant_image}", file=sys.stderr)
+agent.run_helper('podman-pull-missing', qdrant_image)
+
+# Create data volume for Qdrant storage
+print("Creating Qdrant data volume...", file=sys.stderr)
+agent.run_helper('podman', 'volume', 'create', 'qdrant-data')
+
+# Start/restart the Qdrant service
+print("Starting Qdrant service...", file=sys.stderr)
+agent.run_helper('systemctl', '--user', 'daemon-reload')
+agent.run_helper('systemctl', '--user', 'restart', 'qdrant.service')
+agent.run_helper('systemctl', '--user', 'enable', 'qdrant.service')
+
 # Find default traefik instance for current node
 default_traefik_id = agent.resolve_agent_id('traefik@node')
 if default_traefik_id is None:

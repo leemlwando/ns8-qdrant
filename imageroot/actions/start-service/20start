@@ -5,8 +5,14 @@ import sys
 import subprocess
 
 try:
+    # Start the Qdrant service
     subprocess.run([
-        'systemctl', '--user', 'start', 'qdrant'
+        'systemctl', '--user', 'start', 'qdrant.service'
+    ], check=True)
+    
+    # Also enable it for auto-start
+    subprocess.run([
+        'systemctl', '--user', 'enable', 'qdrant.service'
     ], check=True)
     
     json.dump({"service_started": True}, fp=sys.stdout)
