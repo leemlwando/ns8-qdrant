@@ -40,7 +40,8 @@
           <div v-else>
             <section>
               <div class="logo-and-name">
-                <div class="app-logo">                  <img
+                <div class="app-logo">
+                  <img
                     :src="
                       app.logo
                         ? app.logo
@@ -79,7 +80,7 @@
                   >{{
                     core.$tc(
                       "software_center.categories",
-                      app.categories.length
+                      app.categories.length,
                     )
                   }}:</span
                 >
@@ -240,13 +241,13 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.listInstalledModulesAborted
+        this.listInstalledModulesAborted,
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.listInstalledModulesCompleted
+        this.listInstalledModulesCompleted,
       );
 
       const res = await to(
@@ -257,7 +258,7 @@ export default {
             isNotificationHidden: true,
             eventId,
           },
-        })
+        }),
       );
       const err = res[0];
 

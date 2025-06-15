@@ -288,13 +288,13 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.getStatusAborted
+        this.getStatusAborted,
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.getStatusCompleted
+        this.getStatusCompleted,
       );
 
       const res = await to(
@@ -305,7 +305,7 @@ export default {
             isNotificationHidden: true,
             eventId,
           },
-        })
+        }),
       );
       const err = res[0];
 

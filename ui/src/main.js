@@ -38,7 +38,7 @@ Vue.use(VueI18n);
 
 async function loadI18n() {
   const i18n = new VueI18n();
-  
+
   // detect browser language
   const lang = navigator.language.substring(0, 2);
   await loadLanguage(lang, i18n);

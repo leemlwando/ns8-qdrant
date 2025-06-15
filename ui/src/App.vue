@@ -36,7 +36,7 @@ export default {
 
     // extract instance name from URL
     const instanceName = /#\/apps\/([a-zA-Z0-9_-]+)/.exec(
-      window.parent.location.hash
+      window.parent.location.hash,
     )[1];
     this.setInstanceNameInStore(instanceName);
     this.getInstanceLabel();
@@ -50,7 +50,7 @@ export default {
         const requestedPage = e.detail;
         context.$router.replace(requestedPage);
       },
-      false
+      false,
     );
 
     // configure global shortcuts
@@ -77,13 +77,13 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.getInstanceLabelAborted
+        this.getInstanceLabelAborted,
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.getInstanceLabelCompleted
+        this.getInstanceLabelCompleted,
       );
 
       const res = await to(
@@ -94,7 +94,7 @@ export default {
             isNotificationHidden: true,
             eventId,
           },
-        })
+        }),
       );
       const err = res[0];
 
@@ -102,7 +102,7 @@ export default {
         console.error(`error creating task ${taskAction}`, err);
         this.createErrorNotificationForApp(
           err,
-          this.$t("task.cannot_create_task", { action: taskAction })
+          this.$t("task.cannot_create_task", { action: taskAction }),
         );
         return;
       }

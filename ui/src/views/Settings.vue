@@ -98,7 +98,9 @@
                     type="number"
                     :helper-text="$t('settings.collection_size_limit_helper')"
                     :invalid-message="$t(error.collection_size_limit)"
-                    :disabled="loading.getConfiguration || loading.configureModule"
+                    :disabled="
+                      loading.getConfiguration || loading.configureModule
+                    "
                     ref="collection_size_limit"
                   >
                   </cv-text-input>
@@ -106,7 +108,9 @@
                     value="enableCors"
                     :label="$t('settings.enable_cors')"
                     v-model="enable_cors"
-                    :disabled="loading.getConfiguration || loading.configureModule"
+                    :disabled="
+                      loading.getConfiguration || loading.configureModule
+                    "
                     class="mg-bottom"
                   >
                     <template slot="text-left">{{
@@ -244,13 +248,13 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.getConfigurationAborted
+        this.getConfigurationAborted,
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.getConfigurationCompleted
+        this.getConfigurationCompleted,
       );
 
       const res = await to(
@@ -261,7 +265,7 @@ export default {
             isNotificationHidden: true,
             eventId,
           },
-        })
+        }),
       );
       const err = res[0];
 
@@ -289,7 +293,8 @@ export default {
       this.lets_encrypt = config.lets_encrypt || false;
       this.http2https = config.http2https || false;
       this.collection_size_limit = config.collection_size_limit || 10000;
-      this.enable_cors = config.enable_cors !== undefined ? config.enable_cors : true;
+      this.enable_cors =
+        config.enable_cors !== undefined ? config.enable_cors : true;
 
       this.focusElement("host");
     },
@@ -314,7 +319,8 @@ export default {
       }
 
       if (this.collection_size_limit < 0) {
-        this.error.collection_size_limit = "settings.invalid_collection_size_limit";
+        this.error.collection_size_limit =
+          "settings.invalid_collection_size_limit";
         if (isValidationOk) {
           this.focusElement("collection_size_limit");
         }
@@ -352,19 +358,19 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.configureModuleAborted
+        this.configureModuleAborted,
       );
 
       // register to task validation
       this.core.$root.$once(
         `${taskAction}-validation-failed-${eventId}`,
-        this.configureModuleValidationFailed
+        this.configureModuleValidationFailed,
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.configureModuleCompleted
+        this.configureModuleCompleted,
       );
 
       const res = await to(
@@ -387,7 +393,7 @@ export default {
             description: this.$t("settings.configuring"),
             eventId,
           },
-        })
+        }),
       );
       const err = res[0];
 
@@ -422,13 +428,13 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.testConnectionAborted
+        this.testConnectionAborted,
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.testConnectionCompleted
+        this.testConnectionCompleted,
       );
 
       const res = await to(
@@ -445,7 +451,7 @@ export default {
             isNotificationHidden: true,
             eventId,
           },
-        })
+        }),
       );
       const err = res[0];
 
@@ -464,16 +470,17 @@ export default {
     testConnectionCompleted(taskContext, taskResult) {
       this.loading.testConnection = false;
       const result = taskResult.output;
-      
+
       if (result.success) {
         this.createSuccessNotificationForApp({
           title: this.$t("settings.test_connection_success"),
-          description: result.version 
+          description: result.version
             ? this.$t("settings.version_detected", { version: result.version })
             : this.$t("settings.connection_successful"),
         });
       } else {
-        this.error.testConnection = result.error || this.$t("settings.connection_failed");
+        this.error.testConnection =
+          result.error || this.$t("settings.connection_failed");
       }
     },
   },
