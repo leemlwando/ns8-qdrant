@@ -8,7 +8,7 @@ images=()
 # The image will be pushed to GitHub container registry
 repobase="${REPOBASE:-ghcr.io/leemlwando}"
 # Configure the image name
-reponame="qdrant"
+reponame="ns8-qdrant"
 
 # Create a new empty container image
 container=$(buildah from scratch)

@@ -9,7 +9,7 @@ set -e
 
 if [[ $# -lt 2 ]]; then
     echo "Usage: $0 <NODE_ADDR> <IMAGE_URL> [instances_count] [ssh_key]"
-    echo "Example: $0 10.5.4.1 ghcr.io/nethserver/qdrant:latest"
+    echo "Example: $0 10.5.4.1 ghcr.io/leemlwando/ns8-qdrant:latest"
     exit 1
 fi
 
