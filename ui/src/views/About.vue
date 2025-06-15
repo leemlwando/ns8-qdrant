@@ -1,5 +1,5 @@
 <!--
-  Copyright (C) 2023 Nethesis S.r.l.
+  Copyright (C) 2024 Nethesis S.r.l.
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <template>
@@ -38,100 +38,89 @@
             />
           </div>
           <div v-else>
-            <section>
-              <div class="logo-and-name">
-                <div class="app-logo">
-                  <img
-                    :src="
-                      app.logo
-                        ? app.logo
-                        : require('@/assets/module_default_logo.svg')
-                    "
-                    :alt="app.name + ' logo'"
-                  />
-                </div>
-                <div class="app-name">
-                  <h3>{{ app.name }}</h3>
-                </div>
+            <div class="logo-and-name">
+              <div class="app-logo">
+                <img
+                  :src="
+                    app.logo
+                      ? app.logo
+                      : require('@/assets/module_default_logo.png')
+                  "
+                  :alt="app.name + ' logo'"
+                />
               </div>
-            </section>
+              <div class="app-name">
+                <h3>{{ app.name }}</h3>
+              </div>
+            </div>
             <div class="description">
               {{ getApplicationDescription(app) }}
             </div>
-            <section>
-              <div>
-                <span class="section-title"
-                  >{{ core.$t("software_center.instance") }}:</span
-                >
-                {{ instanceName }}
-              </div>
-            </section>
-            <section>
-              <div>
-                <span class="section-title"
-                  >{{ core.$t("common.version") }}:</span
-                >
-                {{ version }}
-              </div>
-            </section>
-            <section>
-              <div>
-                <span class="section-title"
-                  >{{
-                    core.$tc(
-                      "software_center.categories",
-                      app.categories.length,
-                    )
-                  }}:</span
-                >
-                {{ getApplicationCategories(app) }}
-              </div>
-            </section>
-            <section>
-              <div>
-                <span class="section-title"
-                  >{{ core.$t("software_center.documentation") }}:
+            <div class="key-value-setting">
+              <span class="label">{{
+                core.$t("software_center.instance")
+              }}</span>
+              <span class="value">{{ instanceName }}</span>
+            </div>
+            <div class="key-value-setting">
+              <span class="label">{{ core.$t("common.version") }}</span>
+              <span class="value">
+                <cv-skeleton-text
+                  v-if="loading.version"
+                  class="version-skeleton"
+                ></cv-skeleton-text>
+                <span v-else>
+                  {{ version }}
                 </span>
+              </span>
+            </div>
+            <div class="key-value-setting">
+              <span class="label">{{
+                core.$tc("software_center.categories", app.categories.length)
+              }}</span>
+              <span class="value">{{ getApplicationCategories(app) }}</span>
+            </div>
+            <div class="key-value-setting">
+              <span class="label">{{
+                core.$t("software_center.documentation")
+              }}</span>
+              <span class="value">
                 <cv-link :href="app.docs.documentation_url" target="_blank">
                   {{ app.docs.documentation_url }}
                 </cv-link>
-              </div>
-            </section>
-            <section>
-              <div>
-                <span class="section-title"
-                  >{{ core.$t("software_center.bugs") }}:
-                </span>
+              </span>
+            </div>
+            <div class="key-value-setting">
+              <span class="label">{{ core.$t("software_center.bugs") }}</span>
+              <span class="value">
                 <cv-link :href="app.docs.bug_url" target="_blank">
                   {{ app.docs.bug_url }}
                 </cv-link>
-              </div>
-            </section>
-            <section>
-              <div>
-                <span class="section-title"
-                  >{{ core.$t("software_center.source_code") }}:
-                </span>
+              </span>
+            </div>
+            <div class="key-value-setting">
+              <span class="label">{{
+                core.$t("software_center.source_code")
+              }}</span>
+              <span class="value">
                 <cv-link :href="app.docs.code_url" target="_blank">
                   {{ app.docs.code_url }}
                 </cv-link>
-              </div>
-            </section>
-            <section>
-              <div>
-                <span class="section-title"
-                  >{{ core.$t("software_center.source_package") }}:
-                </span>
+              </span>
+            </div>
+            <div class="key-value-setting">
+              <span class="label">{{
+                core.$t("software_center.source_package")
+              }}</span>
+              <span class="value">
                 {{ app.source }}
-              </div>
-            </section>
-            <section>
-              <div>
-                <span class="section-title"
-                  >{{
-                    core.$tc("software_center.authors", app.authors.length)
-                  }}:
-                </span>
+              </span>
+            </div>
+            <div class="key-value-setting">
+              <span class="label">{{
+                core.$tc("software_center.authors", app.authors.length)
+              }}</span>
+              <span class="value">
                 <span v-if="app.authors.length == 1"
                   >{{ app.authors[0].name }}
                   <cv-link
@@ -143,8 +132,8 @@
                     {{ app.authors[0].email }}
                   </cv-link>
                 </span>
-                <ul v-else class="authors">
-                  <li
+                <div v-else class="authors">
+                  <div
                     v-for="(author, index) in app.authors"
                     :key="index"
                     class="author"
@@ -158,10 +147,10 @@
                     >
                       {{ author.email }}
                     </cv-link>
-                  </li>
-                </ul>
-              </div>
-            </section>
+                  </div>
+                </div>
+              </span>
+            </div>
           </div>
         </cv-tile>
       </cv-column>
@@ -192,7 +181,7 @@ export default {
       },
       urlCheckInterval: null,
       app: null,
-      version: "-",
+      version: "",
       error: {
         moduleInfo: "",
         version: "",
@@ -208,6 +197,7 @@ export default {
   },
   created() {
     this.getModuleInfo();
+
     // needed to retrieve module version
     this.listInstalledModules();
   },
@@ -241,13 +231,13 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.listInstalledModulesAborted,
+        this.listInstalledModulesAborted
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.listInstalledModulesCompleted,
+        this.listInstalledModulesCompleted
       );
 
       const res = await to(
@@ -258,7 +248,7 @@ export default {
             isNotificationHidden: true,
             eventId,
           },
-        }),
+        })
       );
       const err = res[0];
 
@@ -326,5 +316,32 @@ section {
 
 .author {
   margin-left: $spacing-05;
+  margin-bottom: $spacing-02;
+}
+
+.authors {
+  margin-top: $spacing-02;
+}
+
+.email {
+  margin-left: $spacing-02;
+}
+
+.version-skeleton {
+  display: inline-flex;
+  width: 3rem !important;
+  position: relative;
+  top: 1px;
+}
+</style>
+
+<style lang="scss">
+@import "../styles/carbon-utils";
+
+// global styles
+
+.version-skeleton .bx--skeleton__text {
+  margin-bottom: 0;
+  height: 12px;
 }
 </style>

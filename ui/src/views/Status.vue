@@ -1,5 +1,5 @@
 <!--
-  Copyright (C) 2023 Nethesis S.r.l.
+  Copyright (C) 2024 Nethesis S.r.l.
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <template>
@@ -23,9 +23,9 @@
       <cv-column :md="4" :max="4">
         <NsInfoCard
           light
-          :title="status ? status.instance : ''"
+          :title="status.instance || '-'"
           :description="$t('status.app_instance')"
-          :icon="Database32"
+          :icon="Application32"
           :loading="loading.getStatus"
           class="min-height-card"
         />
@@ -42,18 +42,13 @@
         />
       </cv-column>
       <cv-column :md="4" :max="4">
-        <NsSystemLogsCard
-          :title="core.$t('system_logs.card_title')"
-          :description="
-            core.$t('system_logs.card_description', {
-              name: instanceLabel || instanceName,
-            })
-          "
-          :buttonLabel="core.$t('system_logs.card_button_label')"
-          :router="core.$router"
-          context="module"
-          :moduleId="instanceName"
+        <NsInfoCard
           light
+          :title="status.tcp_port ? status.tcp_port.toString() : '-'"
+          :description="$t('status.tcp_port')"
+          :icon="Connect32"
+          :loading="loading.getStatus"
+          class="min-height-card"
         />
       </cv-column>
     </cv-row>
@@ -64,7 +59,7 @@
       </cv-column>
     </cv-row>
     <cv-row v-if="!loading.getStatus">
-      <cv-column v-if="!status.services.length">
+      <cv-column v-if="!status.services || !status.services.length">
         <cv-tile light>
           <NsEmptyState :title="$t('status.no_services')"> </NsEmptyState>
         </cv-tile>
@@ -108,7 +103,7 @@
         <cv-tile light>
           <div v-if="!loading.getStatus">
             <NsEmptyState
-              v-if="!status.images.length"
+              v-if="!status.images || !status.images.length"
               :title="$t('status.no_images')"
             >
             </NsEmptyState>
@@ -161,7 +156,7 @@
         <cv-tile light>
           <div v-if="!loading.getStatus">
             <NsEmptyState
-              v-if="!status.volumes.length"
+              v-if="!status.volumes || !status.volumes.length"
               :title="$t('status.no_volumes')"
             >
             </NsEmptyState>
@@ -235,7 +230,7 @@ export default {
         page: "status",
       },
       urlCheckInterval: null,
-      status: null,
+      status: {},
       loading: {
         getStatus: false,
       },
@@ -247,19 +242,15 @@ export default {
   computed: {
     ...mapState(["instanceName", "instanceLabel", "core", "appName"]),
     installationNodeTitle() {
-      if (this.status && this.status.node) {
-        if (this.status.node_ui_name) {
-          return this.status.node_ui_name;
-        } else {
-          return this.$t("status.node") + " " + this.status.node;
-        }
+      if (this.status && this.status.node_id) {
+        return this.getNodeNameFromNodeId(this.status.node_id);
       } else {
-        return "";
+        return "-";
       }
     },
     installationNodeTitleTooltip() {
-      if (this.status && this.status.node_ui_name) {
-        return this.$t("status.node") + " " + this.status.node;
+      if (this.status && this.status.node_id) {
+        return this.$t("common.node_id", { id: this.status.node_id });
       } else {
         return "";
       }
@@ -288,13 +279,13 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.getStatusAborted,
+        this.getStatusAborted
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.getStatusCompleted,
+        this.getStatusCompleted
       );
 
       const res = await to(
@@ -305,7 +296,7 @@ export default {
             isNotificationHidden: true,
             eventId,
           },
-        }),
+        })
       );
       const err = res[0];
 
@@ -322,8 +313,8 @@ export default {
       this.loading.getStatus = false;
     },
     getStatusCompleted(taskContext, taskResult) {
-      this.status = taskResult.output;
       this.loading.getStatus = false;
+      this.status = taskResult.output;
     },
   },
 };

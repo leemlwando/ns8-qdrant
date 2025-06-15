@@ -1,8 +1,7 @@
 //
-// Copyright (C) 2023 Nethesis S.r.l.
+// Copyright (C) 2024 Nethesis S.r.l.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
-import "core-js/stable";
 import Vue from "vue";
 import App from "./App.vue";
 import router from "./router";
@@ -22,6 +21,12 @@ Vue.use(ns8Lib);
 import VueDateFns from "vue-date-fns";
 Vue.use(VueDateFns);
 
+import LottieAnimation from "lottie-web-vue";
+Vue.use(LottieAnimation);
+
+import vueDebounce from "vue-debounce";
+Vue.use(vueDebounce);
+
 // filters
 import { Filters } from "@nethserver/ns8-ui-lib";
 for (const f in Filters) {
@@ -30,25 +35,8 @@ for (const f in Filters) {
 
 Vue.config.productionTip = false;
 
-// i18n
-import VueI18n from "vue-i18n";
-import { loadLanguage } from "./i18n";
-
-Vue.use(VueI18n);
-
-async function loadI18n() {
-  const i18n = new VueI18n();
-
-  // detect browser language
-  const lang = navigator.language.substring(0, 2);
-  await loadLanguage(lang, i18n);
-
-  new Vue({
-    router,
-    store,
-    i18n,
-    render: (h) => h(App),
-  }).$mount("#ns8-app");
-}
-
-loadI18n();
+new Vue({
+  router,
+  store,
+  render: (h) => h(App),
+}).$mount("#ns8-app");

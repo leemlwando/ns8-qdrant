@@ -1,5 +1,5 @@
 <!--
-  Copyright (C) 2023 Nethesis S.r.l.
+  Copyright (C) 2024 Nethesis S.r.l.
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <template>
@@ -23,46 +23,25 @@
       <cv-column>
         <cv-tile light>
           <cv-form @submit.prevent="configureModule">
-            <cv-text-input
-              :label="$t('settings.host')"
-              v-model="host"
-              placeholder="qdrant.mydomain.org"
-              :disabled="loading.getConfiguration || loading.configureModule"
+            <NsTextInput
+              :label="$t('settings.qdrant_fqdn')"
+              placeholder="qdrant.example.org"
+              v-model.trim="host"
+              class="mg-bottom"
               :invalid-message="$t(error.host)"
+              :disabled="loading.getConfiguration || loading.configureModule"
               ref="host"
-            ></cv-text-input>
-            <cv-text-input
-              :label="$t('settings.path')"
-              v-model="path"
-              placeholder="/qdrant"
-              :disabled="loading.getConfiguration || loading.configureModule"
-              :invalid-message="$t(error.path)"
-              :helper-text="$t('settings.path_helper')"
-              ref="path"
-            ></cv-text-input>
-            <cv-text-input
-              :label="$t('settings.port')"
-              v-model="port"
-              type="number"
-              placeholder="6333"
-              :disabled="loading.getConfiguration || loading.configureModule"
-              :invalid-message="$t(error.port)"
-              ref="port"
-            ></cv-text-input>
-            <cv-text-input
-              :label="$t('settings.api_key')"
-              v-model="api_key"
-              type="password"
-              :placeholder="$t('settings.api_key_placeholder')"
-              :disabled="loading.getConfiguration || loading.configureModule"
-              :invalid-message="$t(error.api_key)"
-              :helper-text="$t('settings.api_key_helper')"
-              ref="api_key"
-            ></cv-text-input>
+              tooltipAlignment="center"
+              tooltipDirection="right"
+            >
+              <template slot="tooltip">
+                <div>{{ $t("settings.host_tooltip") }}</div>
+              </template>
+            </NsTextInput>
             <cv-toggle
               value="letsEncrypt"
               :label="$t('settings.lets_encrypt')"
-              v-model="lets_encrypt"
+              v-model="isLetsEncryptEnabled"
               :disabled="loading.getConfiguration || loading.configureModule"
               class="mg-bottom"
             >
@@ -74,10 +53,9 @@
               }}</template>
             </cv-toggle>
             <cv-toggle
-              v-if="lets_encrypt"
-              value="http2https"
-              :label="$t('settings.http2https')"
-              v-model="http2https"
+              value="httpToHttps"
+              :label="$t('settings.http_to_https')"
+              v-model="isHttpToHttpsEnabled"
               :disabled="loading.getConfiguration || loading.configureModule"
               class="mg-bottom"
             >
@@ -88,42 +66,45 @@
                 $t("settings.enabled")
               }}</template>
             </cv-toggle>
-            <cv-accordion ref="accordion">
+            <NsTextInput
+              :label="$t('settings.api_key')"
+              :placeholder="$t('settings.api_key_placeholder')"
+              v-model.trim="apiKey"
+              class="mg-bottom"
+              :invalid-message="$t(error.api_key)"
+              :disabled="loading.getConfiguration || loading.configureModule"
+              ref="api_key"
+              tooltipAlignment="center"
+              tooltipDirection="right"
+            >
+              <template slot="tooltip">
+                <div>{{ $t("settings.api_key_tooltip") }}</div>
+              </template>
+            </NsTextInput>
+            <!-- advanced options -->
+            <cv-accordion ref="accordion" class="maxwidth mg-bottom">
               <cv-accordion-item :open="toggleAccordion[0]">
-                <template slot="title">{{ $t("common.advanced") }}</template>
+                <template slot="title">{{ $t("settings.advanced") }}</template>
                 <template slot="content">
-                  <cv-text-input
-                    :label="$t('settings.collection_size_limit')"
-                    v-model="collection_size_limit"
-                    type="number"
-                    :helper-text="$t('settings.collection_size_limit_helper')"
-                    :invalid-message="$t(error.collection_size_limit)"
-                    :disabled="
-                      loading.getConfiguration || loading.configureModule
-                    "
-                    ref="collection_size_limit"
-                  >
-                  </cv-text-input>
-                  <cv-toggle
-                    value="enableCors"
-                    :label="$t('settings.enable_cors')"
-                    v-model="enable_cors"
-                    :disabled="
-                      loading.getConfiguration || loading.configureModule
-                    "
-                    class="mg-bottom"
-                  >
-                    <template slot="text-left">{{
-                      $t("settings.disabled")
-                    }}</template>
-                    <template slot="text-right">{{
-                      $t("settings.enabled")
-                    }}</template>
-                  </cv-toggle>
+                  <template v-if="tcpPort">
+                    <span class="mg-bottom">
+                      {{ $t("settings.tcp_port") }}
+                      <cv-tooltip
+                        alignment="start"
+                        direction="bottom"
+                        :tip="$t('settings.tcp_port_tooltip')"
+                        class="info mg-bottom"
+                      >
+                      </cv-tooltip>
+                    </span>
+                    <span>:</span>
+                    <span class="mg-bottom mg-left">
+                      {{ tcpPort }}
+                    </span>
+                  </template>
                 </template>
               </cv-accordion-item>
             </cv-accordion>
-            <br />
             <cv-row v-if="error.configureModule">
               <cv-column>
                 <NsInlineNotification
@@ -134,25 +115,6 @@
                 />
               </cv-column>
             </cv-row>
-            <cv-row v-if="error.testConnection">
-              <cv-column>
-                <NsInlineNotification
-                  kind="error"
-                  :title="$t('settings.test_connection')"
-                  :description="error.testConnection"
-                  :showCloseButton="false"
-                />
-              </cv-column>
-            </cv-row>
-            <NsButton
-              kind="secondary"
-              :icon="TestTube20"
-              :loading="loading.testConnection"
-              :disabled="loading.getConfiguration || loading.configureModule"
-              @click="testConnection"
-              class="mg-right"
-              >{{ $t("settings.test_connection") }}</NsButton
-            >
             <NsButton
               kind="primary"
               :icon="Save20"
@@ -197,33 +159,28 @@ export default {
       },
       urlCheckInterval: null,
       host: "",
-      path: "",
-      port: 6333,
-      api_key: "",
-      lets_encrypt: false,
-      http2https: false,
-      collection_size_limit: 10000,
-      enable_cors: true,
+      isLetsEncryptEnabled: false,
+      isHttpToHttpsEnabled: true,
+      apiKey: "",
+      tcpPort: null,
       toggleAccordion: [false],
       loading: {
         getConfiguration: false,
         configureModule: false,
-        testConnection: false,
       },
       error: {
         getConfiguration: "",
         configureModule: "",
-        testConnection: "",
         host: "",
-        path: "",
-        port: "",
         api_key: "",
-        collection_size_limit: "",
       },
     };
   },
   computed: {
     ...mapState(["instanceName", "core", "appName"]),
+  },
+  created() {
+    this.getConfiguration();
   },
   beforeRouteEnter(to, from, next) {
     next((vm) => {
@@ -235,9 +192,6 @@ export default {
     clearInterval(this.urlCheckInterval);
     next();
   },
-  created() {
-    this.getConfiguration();
-  },
   methods: {
     async getConfiguration() {
       this.loading.getConfiguration = true;
@@ -248,13 +202,13 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.getConfigurationAborted,
+        this.getConfigurationAborted
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.getConfigurationCompleted,
+        this.getConfigurationCompleted
       );
 
       const res = await to(
@@ -265,7 +219,7 @@ export default {
             isNotificationHidden: true,
             eventId,
           },
-        }),
+        })
       );
       const err = res[0];
 
@@ -283,50 +237,27 @@ export default {
     },
     getConfigurationCompleted(taskContext, taskResult) {
       const config = taskResult.output;
+      this.host = config.host;
+      this.isLetsEncryptEnabled = config.lets_encrypt;
+      this.isHttpToHttpsEnabled = config.http2https;
+      this.apiKey = config.api_key;
+      this.tcpPort = config.tcp_port;
+
       this.loading.getConfiguration = false;
-
-      // Populate form fields
-      this.host = config.host || "";
-      this.path = config.path || "";
-      this.port = config.port || 6333;
-      this.api_key = config.api_key || "";
-      this.lets_encrypt = config.lets_encrypt || false;
-      this.http2https = config.http2https || false;
-      this.collection_size_limit = config.collection_size_limit || 10000;
-      this.enable_cors =
-        config.enable_cors !== undefined ? config.enable_cors : true;
-
       this.focusElement("host");
     },
     validateConfigureModule() {
       this.clearErrors(this);
-      let isValidationOk = true;
 
+      let isValidationOk = true;
       if (!this.host) {
         this.error.host = "common.required";
+
         if (isValidationOk) {
           this.focusElement("host");
         }
         isValidationOk = false;
       }
-
-      if (this.port < 1 || this.port > 65535) {
-        this.error.port = "settings.invalid_port";
-        if (isValidationOk) {
-          this.focusElement("port");
-        }
-        isValidationOk = false;
-      }
-
-      if (this.collection_size_limit < 0) {
-        this.error.collection_size_limit =
-          "settings.invalid_collection_size_limit";
-        if (isValidationOk) {
-          this.focusElement("collection_size_limit");
-        }
-        isValidationOk = false;
-      }
-
       return isValidationOk;
     },
     configureModuleValidationFailed(validationErrors) {
@@ -345,7 +276,6 @@ export default {
       }
     },
     async configureModule() {
-      this.error.testConnection = "";
       const isValidationOk = this.validateConfigureModule();
       if (!isValidationOk) {
         return;
@@ -358,19 +288,19 @@ export default {
       // register to task error
       this.core.$root.$once(
         `${taskAction}-aborted-${eventId}`,
-        this.configureModuleAborted,
+        this.configureModuleAborted
       );
 
       // register to task validation
       this.core.$root.$once(
         `${taskAction}-validation-failed-${eventId}`,
-        this.configureModuleValidationFailed,
+        this.configureModuleValidationFailed
       );
 
       // register to task completion
       this.core.$root.$once(
         `${taskAction}-completed-${eventId}`,
-        this.configureModuleCompleted,
+        this.configureModuleCompleted
       );
 
       const res = await to(
@@ -378,13 +308,9 @@ export default {
           action: taskAction,
           data: {
             host: this.host,
-            path: this.path,
-            lets_encrypt: this.lets_encrypt,
-            http2https: this.http2https,
-            port: parseInt(this.port),
-            api_key: this.api_key,
-            collection_size_limit: parseInt(this.collection_size_limit),
-            enable_cors: this.enable_cors,
+            lets_encrypt: this.isLetsEncryptEnabled,
+            http2https: this.isHttpToHttpsEnabled,
+            api_key: this.apiKey,
           },
           extra: {
             title: this.$t("settings.instance_configuration", {
@@ -393,7 +319,7 @@ export default {
             description: this.$t("settings.configuring"),
             eventId,
           },
-        }),
+        })
       );
       const err = res[0];
 
@@ -411,77 +337,9 @@ export default {
     },
     configureModuleCompleted() {
       this.loading.configureModule = false;
+
       // reload configuration
       this.getConfiguration();
-    },
-    async testConnection() {
-      this.error.testConnection = "";
-      const isValidationOk = this.validateConfigureModule();
-      if (!isValidationOk) {
-        return;
-      }
-
-      this.loading.testConnection = true;
-      const taskAction = "test-connection";
-      const eventId = this.getUuid();
-
-      // register to task error
-      this.core.$root.$once(
-        `${taskAction}-aborted-${eventId}`,
-        this.testConnectionAborted,
-      );
-
-      // register to task completion
-      this.core.$root.$once(
-        `${taskAction}-completed-${eventId}`,
-        this.testConnectionCompleted,
-      );
-
-      const res = await to(
-        this.createModuleTaskForApp(this.instanceName, {
-          action: taskAction,
-          data: {
-            host: this.host,
-            path: this.path,
-            port: parseInt(this.port),
-            api_key: this.api_key,
-          },
-          extra: {
-            title: this.$t("settings.test_connection"),
-            isNotificationHidden: true,
-            eventId,
-          },
-        }),
-      );
-      const err = res[0];
-
-      if (err) {
-        console.error(`error creating task ${taskAction}`, err);
-        this.error.testConnection = this.getErrorMessage(err);
-        this.loading.testConnection = false;
-        return;
-      }
-    },
-    testConnectionAborted(taskResult, taskContext) {
-      console.error(`${taskContext.action} aborted`, taskResult);
-      this.error.testConnection = this.$t("error.generic_error");
-      this.loading.testConnection = false;
-    },
-    testConnectionCompleted(taskContext, taskResult) {
-      this.loading.testConnection = false;
-      const result = taskResult.output;
-
-      if (result.success) {
-        this.createSuccessNotificationForApp({
-          title: this.$t("settings.test_connection_success"),
-          description: result.version
-            ? this.$t("settings.version_detected", { version: result.version })
-            : this.$t("settings.connection_successful"),
-        });
-      } else {
-        this.error.testConnection =
-          result.error || this.$t("settings.connection_failed");
-      }
     },
   },
 };
@@ -492,7 +350,8 @@ export default {
 .mg-bottom {
   margin-bottom: $spacing-06;
 }
-.mg-right {
-  margin-right: $spacing-05;
+
+.maxwidth {
+  max-width: 38rem;
 }
 </style>

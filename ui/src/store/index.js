@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2023 Nethesis S.r.l.
+// Copyright (C) 2024 Nethesis S.r.l.
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
 import Vue from "vue";
@@ -9,7 +9,7 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    appName: "qdrant",
+    appName: "",
     instanceName: "",
     instanceLabel: "",
     core: null,

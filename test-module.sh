@@ -1,36 +1,31 @@
 #!/bin/bash
 
 #
-# Copyright (C) 2023 Nethesis S.r.l.
+# Copyright (C) 2024 Nethesis S.r.l.
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-LEADER_NODE=$1
-IMAGE_URL=$2
-SSH_KEYFILE=${SSH_KEYFILE:-$HOME/.ssh/id_rsa}
+set -e
 
-ssh_key="$(cat $SSH_KEYFILE)"
+if [[ $# -lt 2 ]]; then
+    echo "Usage: $0 <NODE_ADDR> <IMAGE_URL> [instances_count] [ssh_key]"
+    echo "Example: $0 10.5.4.1 ghcr.io/nethserver/qdrant:latest"
+    exit 1
+fi
 
-podman run -i \
-    -v .:/home/pwuser/ns8-module:z \
-    --name rf-core-runner ghcr.io/marketsquare/robotframework-browser/rfbrowser-stable:v10.0.3 \
-    bash -l -s <<EOF
-    set -e
-    echo "$ssh_key" > /home/pwuser/ns8-key
-    set -x
-    pip install -r /home/pwuser/ns8-module/tests/pythonreq.txt
-    mkdir ~/outputs
-    cd /home/pwuser/ns8-module
-    robot -v NODE_ADDR:${LEADER_NODE} \
-        -v IMAGE_URL:${IMAGE_URL} \
-        -v SSH_KEYFILE:/home/pwuser/ns8-key \
-	-d ~/outputs /home/pwuser/ns8-module/tests/
-EOF
+node_addr="${1}"
+image_url="${2}"
+instances_count="${3:-1}"
+ssh_key="${4:-~/.ssh/id_rsa}"
 
-tests_res=$?
+if [[ ! -f "${ssh_key}" ]]; then
+    echo "ERROR: SSH key not found: ${ssh_key}"
+    exit 1
+fi
 
-podman cp rf-core-runner:/home/pwuser/outputs tests/
-podman stop rf-core-runner
-podman rm rf-core-runner
-
-exit ${tests_res}
+cd tests
+exec robot --python "python3" -v NODE_ADDR:"${node_addr}" \
+    -v IMAGE_URL:"${image_url}" \
+    -v INSTANCES_COUNT:"${instances_count}" \
+    -v SSH_KEY:"${ssh_key}" \
+    *.robot

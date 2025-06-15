@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2024 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+#
+# Get status for NS8
+#
+
+import os
+import sys
+import json
+import subprocess
+
+def run_command(cmd):
+    """Run a command and return the result"""
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        return result.returncode == 0, result.stdout.strip(), result.stderr.strip()
+    except Exception as e:
+        return False, "", str(e)
+
+def get_systemd_services():
+    """Get systemd service status"""
+    services = []
+    
+    # Check qdrant service
+    success, stdout, stderr = run_command("systemctl --user is-active qdrant.service")
+    active = success and stdout == "active"
+    
+    success, stdout, stderr = run_command("systemctl --user is-enabled qdrant.service")
+    enabled = success and stdout == "enabled"
+    
+    success, stdout, stderr = run_command("systemctl --user is-failed qdrant.service")
+    failed = success and stdout == "failed"
+    
+    services.append({
+        "name": "qdrant.service",
+        "active": active,
+        "enabled": enabled,
+        "failed": failed
+    })
+    
+    return services
+
+def get_container_images():
+    """Get container images"""
+    images = []
+    success, stdout, stderr = run_command("podman images --format json")
+    
+    if success and stdout:
+        try:
+            podman_images = json.loads(stdout)
+            for img in podman_images:
+                if 'qdrant' in str(img.get('Names', [])).lower():
+                    images.append({
+                        "name": img.get('Names', ['unknown'])[0] if img.get('Names') else 'unknown',
+                        "size": img.get('Size', 'unknown'),
+                        "created": img.get('Created', 'unknown')
+                    })
+        except json.JSONDecodeError:
+            pass
+    
+    return images
+
+def get_container_volumes():
+    """Get container volumes"""
+    volumes = []
+    success, stdout, stderr = run_command("podman volume ls --format json")
+    
+    if success and stdout:
+        try:
+            podman_volumes = json.loads(stdout)
+            for vol in podman_volumes:
+                if 'qdrant' in vol.get('Name', '').lower():
+                    volumes.append({
+                        "name": vol.get('Name', 'unknown'),
+                        "mount": vol.get('Mountpoint', 'unknown'),
+                        "created": vol.get('CreatedAt', 'unknown')
+                    })
+        except json.JSONDecodeError:
+            pass
+    
+    return volumes
+
+# Prepare status information
+status = {
+    "instance": os.getenv("MODULE_ID", "qdrant"),
+    "node_id": os.getenv("NODE_ID", "unknown"),
+    "tcp_port": int(os.getenv("TCP_PORT", 6333)),
+    "services": get_systemd_services(),
+    "images": get_container_images(),
+    "volumes": get_container_volumes()
+}
+
+# Dump the status to stdout
+json.dump(status, fp=sys.stdout)

@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2024 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Delete traefik routes
+
+import os
+import sys
+import json
+
+# Try to parse the stdin as JSON.
+# If parsing fails, output everything to stderr
+try:
+    data = json.load(sys.stdin)
+except:
+    data = {}
+
+# Find default traefik instance for current node
+try:
+    import agent
+    import agent.tasks
+    
+    default_traefik_id = agent.resolve_agent_id('traefik@node')
+    if default_traefik_id is None:
+        sys.exit(2)
+
+    # Remove traefik route
+    response = agent.tasks.run(
+        agent_id=default_traefik_id,
+        action='delete-route',
+        data={
+            'instance': os.environ['MODULE_ID'],
+        },
+    )
+
+    # Check if traefik configuration has been successful
+    agent.assert_exp(response['exit_code'] == 0)
+except ImportError:
+    # agent module not available, skip traefik cleanup
+    print("Warning: agent module not available, skipping traefik cleanup", file=sys.stderr)
+except Exception as e:
+    print(f"Warning: traefik cleanup failed: {e}", file=sys.stderr)

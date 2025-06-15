@@ -5,21 +5,10 @@ module.exports = {
   },
   extends: ["plugin:vue/essential", "eslint:recommended", "@vue/prettier"],
   parserOptions: {
-    parser: "@babel/eslint-parser",
-    requireConfigFile: false,
-    ecmaVersion: 2020,
-    sourceType: "module",
+    parser: "babel-eslint",
   },
   rules: {
     "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
     "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
   },
-  overrides: [
-    {
-      files: ["src/views/**/*.vue"],
-      rules: {
-        "vue/multi-word-component-names": "off",
-      },
-    },
-  ],
 };
