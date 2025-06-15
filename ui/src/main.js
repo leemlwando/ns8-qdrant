@@ -22,9 +22,6 @@ Vue.use(ns8Lib);
 import VueDateFns from "vue-date-fns";
 Vue.use(VueDateFns);
 
-import LottieAnimation from "lottie-web-vue";
-Vue.use(LottieAnimation);
-
 // filters
 import { Filters } from "@nethserver/ns8-ui-lib";
 for (const f in Filters) {

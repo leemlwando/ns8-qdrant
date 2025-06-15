@@ -8,9 +8,16 @@ module.exports = {
     requireConfigFile: false,
     ecmaVersion: 2020,
     sourceType: "module",
-  },
-  rules: {
+  },  rules: {
     "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
     "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
   },
+  overrides: [
+    {
+      files: ["src/views/**/*.vue"],
+      rules: {
+        "vue/multi-word-component-names": "off",
+      },
+    },
+  ],
 };

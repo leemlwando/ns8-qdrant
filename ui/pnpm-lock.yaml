@@ -6,7 +6,7 @@ settings:
 
 dependencies:
   '@carbon/icons-vue':
-    specifier: ^10.102.0
+    specifier: ^10.110.0
     version: 10.110.0
   '@carbon/vue':
     specifier: ^2.45.1
@@ -23,6 +23,9 @@ dependencies:
   core-js:
     specifier: ^3.43.0
     version: 3.43.0
+  lottie-web-vue:
+    specifier: 1.2.1
+    version: 1.2.1
   vue:
     specifier: ^2.7.16
     version: 2.7.16
@@ -85,6 +88,9 @@ devDependencies:
   sass-loader:
     specifier: ^14.1.0
     version: 14.2.1(sass@1.71.1)(webpack@5.99.9)
+  stream-browserify:
+    specifier: ^3.0.0
+    version: 3.0.0
   vue-template-compiler:
     specifier: ^2.7.16
     version: 2.7.16
@@ -5117,6 +5123,16 @@ packages:
       js-tokens: 4.0.0
     dev: false
 
+  /lottie-web-vue@1.2.1:
+    resolution: {integrity: sha512-JwHb8x5zOBBOL4zObVgBIVmVDMBALo1zMP6/OR+gbEWDpQTpRndixjhjwiVvjUWlrZPl7ScUwiHQGwrn6qlfEw==}
+    dependencies:
+      lottie-web: 5.13.0
+    dev: false
+
+  /lottie-web@5.13.0:
+    resolution: {integrity: sha512-+gfBXl6sxXMPe8tKQm7qzLnUy5DUPJPKIyRHwtpCpyUEYjHYRJC/5gjUvdkuO2c3JllrPtHXH5UJJK8LRYl5yQ==}
+    dev: false
+
   /lower-case@2.0.2:
     resolution: {integrity: sha512-7fm3l3NAF9WfN6W3JOmf5drwpVqX78JtoGJ3A6W0a6ZnldM41w2fV5D490psKFTpMds8TJse/eHLFFsNHHjHgg==}
     dependencies:
@@ -6765,6 +6781,13 @@ packages:
   /statuses@2.0.1:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
     engines: {node: '>= 0.8'}
+    dev: true
+
+  /stream-browserify@3.0.0:
+    resolution: {integrity: sha512-H73RAHsVBapbim0tU2JwwOiXUj+fikfiaoYAKHF3VJfA0pe2BCzkhAHBlLG6REzE+2WNZcxOXjK7lkso+9euLA==}
+    dependencies:
+      inherits: 2.0.4
+      readable-stream: 3.6.2
     dev: true
 
   /string-width@2.1.1:

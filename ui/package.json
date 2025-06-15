@@ -3,41 +3,46 @@
   "version": "2.0.0",
   "description": "Vue.js UI for NS8 Qdrant Vector Database Module",
   "license": "GPL-3.0-or-later",
-  "packageManager": "pnpm@8.15.0",  "engines": {
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
-  },  "dependencies": {
-    "vue": "^2.7.16",
-    "vue-router": "^3.6.5",
-    "vuex": "^3.6.2",
+  },
+  "dependencies": {
+    "@carbon/icons-vue": "^10.110.0",
     "@carbon/vue": "^2.45.1",
-    "@carbon/icons-vue": "^10.102.0",
-    "axios": "^1.6.0",
-    "vue-axios": "^3.5.2",
     "@nethserver/ns8-ui-lib": "^1.3.1",
+    "await-to-js": "^3.0.0",
+    "axios": "^1.6.0",
+    "core-js": "^3.43.0",
+    "lottie-web-vue": "1.2.1",
+    "vue": "^2.7.16",
+    "vue-axios": "^3.5.2",
     "vue-date-fns": "^2.0.2",
     "vue-i18n": "^8.28.2",
-    "await-to-js": "^3.0.0",
-    "core-js": "^3.43.0"
-  },  "devDependencies": {
+    "vue-router": "^3.6.5",
+    "vuex": "^3.6.2"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.24.0",
     "@vue/cli-plugin-babel": "~5.0.8",
     "@vue/cli-plugin-eslint": "~5.0.8",
     "@vue/cli-plugin-router": "~5.0.8",
     "@vue/cli-plugin-vuex": "~5.0.8",
     "@vue/cli-service": "~5.0.8",
     "@vue/eslint-config-prettier": "^9.0.0",
-    "@babel/eslint-parser": "^7.24.0",
+    "crypto-browserify": "^3.12.0",
     "eslint": "^8.57.0",
     "eslint-plugin-prettier": "^5.1.0",
     "eslint-plugin-vue": "^9.24.0",
     "prettier": "^3.2.0",
     "sass": "~1.71.0",
     "sass-loader": "^14.1.0",
-    "vue-template-compiler": "^2.7.16",
-    "crypto-browserify": "^3.12.0"
+    "stream-browserify": "^3.0.0",
+    "vue-template-compiler": "^2.7.16"
   }
 }
