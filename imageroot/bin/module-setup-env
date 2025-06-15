@@ -2,7 +2,7 @@
 set -e
 if [[ ! -f environment ]]; then
     echo "Qdrant database first-time environment setup..."
-    echo "QDRANT_IMAGE=docker.io/qdrant/qdrant:v1.9.0" > environment
+    echo "QDRANT_IMAGE=docker.io/qdrant/qdrant" > environment
     DEFAULT_FQDN="qdrant.$(cat /etc/nethserver/fqdn)"
     echo "QDRANT_HOST=${DEFAULT_FQDN}" >> environment
     echo "QDRANT_PATH=" >> environment
