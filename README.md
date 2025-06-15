@@ -2,6 +2,12 @@
 
 Qdrant is a vector database and similarity search engine for building AI applications with vector embeddings. This NethServer 8 module provides a containerized deployment of Qdrant with a web-based management interface.
 
+## Repository
+
+- **Source Code**: [github.com/leemlwando/ns8-qdrant](https://github.com/leemlwando/ns8-qdrant)
+- **Package Location**: This package is maintained by [@leemlwando](https://github.com/leemlwando)
+- **Issues & Support**: [GitHub Issues](https://github.com/leemlwando/ns8-qdrant/issues)
+
 ## Features
 
 - High-performance vector similarity search
@@ -15,12 +21,39 @@ Qdrant is a vector database and similarity search engine for building AI applica
 
 Instantiate the module with:
 
-    add-module ghcr.io/nethserver/qdrant:latest 1
+    add-module ghcr.io/leemlwando/ns8-qdrant:latest 1
 
 The output of the command will return the instance name.
 Output example:
 
-    {"module_id": "qdrant1", "image_name": "qdrant", "image_url": "ghcr.io/nethserver/qdrant:latest"}
+    {"module_id": "qdrant1", "image_name": "qdrant", "image_url": "ghcr.io/leemlwando/ns8-qdrant:latest"}
+
+## Development
+
+To build and test this module locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/leemlwando/ns8-qdrant.git
+cd ns8-qdrant
+
+# Build the module
+./build-images.sh
+
+# Run tests
+./test-module.sh <NODE_ADDR> ghcr.io/leemlwando/ns8-qdrant:latest
+```
+
+### UI Development
+
+The web interface is built with Vue.js 2.7.x and is compatible with Node.js 22+:
+
+```bash
+cd ui
+yarn install
+yarn serve  # Development server
+yarn build  # Production build
+```
 
 ## Configure
 
@@ -101,9 +134,23 @@ To uninstall the instance:
 
 Test the module using the `test-module.sh` script:
 
-    ./test-module.sh <NODE_ADDR> ghcr.io/nethserver/qdrant:latest
+    ./test-module.sh <NODE_ADDR> ghcr.io/leemlwando/ns8-qdrant:latest
 
 The tests are made using [Robot Framework](https://robotframework.org/)
+
+## Contributing
+
+1. Fork the repository: [github.com/leemlwando/ns8-qdrant](https://github.com/leemlwando/ns8-qdrant)
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes and ensure tests pass
+4. Submit a pull request
+
+## Changelog
+
+### Recent Updates
+- **Vue.js UI Modernization**: Updated to Vue 2.7.16 with Node.js 22+ compatibility
+- **Carbon Icons Fix**: Resolved icon import issues for better UI experience
+- **Build System**: Improved compatibility with modern development environments
 
 ## UI translation
 
@@ -113,3 +160,13 @@ To setup the translation process:
 
 - add [GitHub Weblate app](https://docs.weblate.org/en/latest/admin/continuous.html#github-setup) to your repository
 - add your repository to [hosted.weblate.org](https://hosted.weblate.org) or ask a NethServer developer to add it to ns8 Weblate project
+
+## License
+
+This project is licensed under the same terms as NethServer 8 modules.
+
+## About
+
+This ns8-qdrant module is maintained by [@leemlwando](https://github.com/leemlwando) and provides an easy way to deploy Qdrant vector database on NethServer 8 infrastructure.
+
+**Repository**: [github.com/leemlwando/ns8-qdrant](https://github.com/leemlwando/ns8-qdrant)
