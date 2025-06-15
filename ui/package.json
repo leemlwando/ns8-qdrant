@@ -1,14 +1,14 @@
 {
   "name": "qdrant",
   "version": "0.1.0",
-  "private": true,
-  "scripts": {
+  "private": true,  "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "postinstall": "node scripts/patch-ns8-ui-lib.js"
   },
   "dependencies": {
-    "@carbon/icons-vue": "^10.110.0",
+    "@carbon/icons-vue": "^10.99.1",
     "@carbon/vue": "^2.45.0",
     "@nethserver/ns8-ui-lib": "*",
     "await-to-js": "^3.0.0",
