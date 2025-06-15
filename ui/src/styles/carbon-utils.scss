@@ -1,7 +1,17 @@
-@import "~carbon-components/scss/globals/scss/vendor/@carbon/type/scss/font-family.scss";
-@import "~carbon-components/scss/globals/scss/vendor/@carbon/layout/scss/breakpoint.scss";
-@import "~carbon-components/scss/globals/scss/typography.scss";
-@import "~carbon-components/scss/globals/scss/vars.scss";
+// Modern @carbon/vue approach - no need for manual SCSS imports
+// All Carbon styles are included via the Vue components
+
+// Carbon spacing tokens (converted to rem values)
+$spacing-01: 0.125rem;  // 2px
+$spacing-02: 0.25rem;   // 4px
+$spacing-03: 0.5rem;    // 8px
+$spacing-04: 0.75rem;   // 12px
+$spacing-05: 1rem;      // 16px
+$spacing-06: 1.5rem;    // 24px
+$spacing-07: 2rem;      // 32px
+$spacing-08: 2.5rem;    // 40px
+$spacing-09: 3rem;      // 48px
+$spacing-10: 4rem;      // 64px
 
 $breakpoint-x-large: 1311px;
 $breakpoint-large: 1055px;
