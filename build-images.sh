@@ -29,7 +29,7 @@ buildah run \
     --workingdir=/usr/src/ui \
     --env="NODE_OPTIONS=--openssl-legacy-provider" \
     nodebuilder-qdrant \
-    sh -c "yarn install && yarn build"
+    sh -c "npm install -g pnpm@8.15.0 && pnpm install && pnpm run build"
 
 # Add imageroot directory to the container image
 buildah add "${container}" imageroot /imageroot
