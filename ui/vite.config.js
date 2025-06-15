@@ -1,17 +1,22 @@
 import { defineConfig } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
+import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
-  plugins: [svelte()],
+  plugins: [vue()],
   base: './',
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
   build: {
     manifest: true,
     outDir: 'dist',
     assetsDir: '.',
     sourcemap: false,
     rollupOptions: {
-      // overwrite default .html entry
-      input: '/src/main.js',
+      input: '/index.html',
     },
-  }
+  } 
 })
