@@ -21,13 +21,15 @@ container=$(buildah from scratch)
 if ! buildah containers --format "{{.ContainerName}}" | grep -q nodebuilder-qdrant; then
     echo "Pulling NodeJS runtime..."
     buildah from --name nodebuilder-qdrant -v "${PWD}:/usr/src:Z" docker.io/library/node:20-alpine
+    # Install pnpm globally
+    buildah run nodebuilder-qdrant npm install -g pnpm
 fi
 
 echo "Build static UI files with node..."
 buildah run \
     --workingdir=/usr/src/ui \
     nodebuilder-qdrant \
-    sh -c "npm install && npm run build"
+    sh -c "pnpm install && pnpm run build"
 
 # Add imageroot directory to the container image
 buildah add "${container}" imageroot /imageroot
