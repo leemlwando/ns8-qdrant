@@ -78,6 +78,9 @@ jobs:
         run: |
           # Push the image with the computed tag
           buildah push "$IMAGE" "docker://$IMAGE:$TAG"
+          
+          # Push the latest tag only for main/master branch
+          if [[ "${{ github.ref_name }}" == "main" || "${{ github.ref_name }}" == "master" ]]; then
             buildah push "$IMAGE" "docker://$IMAGE:latest"
           fi
           
