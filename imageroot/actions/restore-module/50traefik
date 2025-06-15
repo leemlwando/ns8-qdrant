@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import os
+import sys
+import agent
+import agent.tasks
+
+# Find default traefik instance for current node
+default_traefik_id = agent.resolve_agent_id('traefik@node')
+if default_traefik_id is None:
+    sys.exit(2)
+
+# Configure traefik virtual host from restored configuration
+response = agent.tasks.run(
+    agent_id=default_traefik_id,
+    action='set-route',
+    data={
+        'instance': os.environ['MODULE_ID'],
+        'url': f'http://127.0.0.1:{os.environ["QDRANT_PORT"]}',
+        'host': os.environ["QDRANT_HOST"],
+        'lets_encrypt': os.environ["QDRANT_LETS_ENCRYPT"] == "True",
+        'http2https': os.environ["QDRANT_HTTP2HTTPS"] == "True",
+        'path': os.environ.get("QDRANT_PATH", "")
+    },
+)
+
+# Check if traefik configuration has been successful
+agent.assert_exp(response['exit_code'] == 0)

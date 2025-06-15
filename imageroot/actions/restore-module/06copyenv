@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import sys
+import json
+import agent
+
+request = json.load(sys.stdin)
+
+original_environment = request['environment']
+
+for evar in [
+        "QDRANT_HOST",
+        "QDRANT_PATH", 
+        "QDRANT_HTTP2HTTPS",
+        "QDRANT_LETS_ENCRYPT",
+        "QDRANT_PORT",
+        "QDRANT_API_KEY",
+        "QDRANT_COLLECTION_SIZE_LIMIT",
+        "QDRANT_ENABLE_CORS",
+    ]:
+     agent.set_env(evar, original_environment[evar])
+
+agent.dump_env()

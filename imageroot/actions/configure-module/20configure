@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 
+#
+# Copyright (C) 2023 Lee M. Lwando
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
 import json
 import sys
 import agent
+import agent.tasks
 import os
 
+# Try to parse the stdin as JSON.
+# If parsing fails, output everything to stderr
 data = json.load(sys.stdin)
 
 # Setup variables from user input
@@ -17,40 +25,28 @@ api_key = data.get('api_key', '')
 collection_size_limit = int(data.get('collection_size_limit', 10000))
 enable_cors = data.get('enable_cors', True)
 
-# Save configuration to persistent storage
-config_file = os.environ.get('AGENT_STATE_DIR', '.') + '/config.json'
-config = {
-    "host": host,
-    "path": path,
-    "lets_encrypt": lets_encrypt,
-    "http2https": http2https,
-    "port": port,
-    "api_key": api_key,
-    "collection_size_limit": collection_size_limit,
-    "enable_cors": enable_cors
-}
-
-with open(config_file, 'w') as f:
-    json.dump(config, f, indent=2)
-
-# Set environment variables for the module
+# Setup configuration from user input.
 agent.set_env('QDRANT_HOST', host)
 agent.set_env('QDRANT_PATH', path)
-agent.set_env('QDRANT_LETS_ENCRYPT', str(lets_encrypt).lower())
-agent.set_env('QDRANT_HTTP2HTTPS', str(http2https).lower())
+agent.set_env('QDRANT_LETS_ENCRYPT', str(lets_encrypt))
+agent.set_env('QDRANT_HTTP2HTTPS', str(http2https))
 agent.set_env('QDRANT_PORT', str(port))
 agent.set_env('QDRANT_API_KEY', api_key)
 agent.set_env('QDRANT_COLLECTION_SIZE_LIMIT', str(collection_size_limit))
 agent.set_env('QDRANT_ENABLE_CORS', str(enable_cors).lower())
 
-# Update environment file for container
-env_file = os.environ.get('AGENT_STATE_DIR', '.') + '/environment'
-with open(env_file, 'w') as f:
-    f.write(f"QDRANT_PORT={port}\n")
-    if api_key:
-        f.write(f"QDRANT_API_KEY={api_key}\n")
-    f.write(f"QDRANT_COLLECTION_SIZE_LIMIT={collection_size_limit}\n")
-    f.write(f"QDRANT_ENABLE_CORS={'true' if enable_cors else 'false'}\n")
+# Make sure everything is saved inside the environment file
+# just before starting systemd unit
+agent.dump_env()
+
+# Save configuration to JSON for later use and backup
+with open('config.json', 'w') as config_file:
+    json.dump(data, config_file, indent=2)
+
+# Find default traefik instance for current node
+default_traefik_id = agent.resolve_agent_id('traefik@node')
+if default_traefik_id is None:
+    sys.exit(2)
 
 # Configure Traefik route by calling the traefik agent
 route_data = {
@@ -60,18 +56,15 @@ route_data = {
     'lets_encrypt': lets_encrypt,
     'http2https': http2https,
 }
+
 if path:
     route_data['path'] = path
 
 response = agent.tasks.run(
-    agent_id=agent.resolve_agent_id('traefik@node'),
+    agent_id=default_traefik_id,
     action='set-route',
     data=route_data,
 )
 
-agent.assert_exp(response['exit_code'] == 0, f"Failed to set traefik route: {response.get('error')}")
-
-# Restart the service to apply new configuration
-agent.run_helper('systemctl', '--user', 'restart', 'qdrant.service')
-
-print("Configuration applied successfully")
+# Check if traefik configuration has been successful
+agent.assert_exp(response['exit_code'] == 0)

@@ -1,0 +1,76 @@
+{
+  "status": {
+    "title": "Status",
+    "app_instance": "App instance",
+    "installation_node": "Installation node",
+    "services": "service | services",
+    "no_services": "No services",
+    "app_images": "app image | app images",
+    "no_images": "No images",
+    "app_volumes": "app volume | app volumes",
+    "no_volumes": "No volumes",
+    "name": "Name",
+    "size": "Size",
+    "created": "Created",
+    "mount": "Mount",
+    "node": "Node"
+  },  "settings": {
+    "title": "Settings",
+    "host": "Host",
+    "path": "Path",
+    "path_helper": "Optional URL path (e.g., /qdrant)",
+    "port": "Port",
+    "api_key": "API Key",
+    "api_key_placeholder": "Optional API key for authentication",
+    "api_key_helper": "Optional API key for authenticating requests",
+    "lets_encrypt": "Let's Encrypt HTTPS",
+    "http2https": "Force HTTPS redirect",
+    "collection_size_limit": "Collection size limit",
+    "collection_size_limit_helper": "Maximum number of points per collection",
+    "enable_cors": "Enable CORS",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "test_connection": "Test Connection",
+    "test_connection_success": "Connection successful",
+    "connection_successful": "Successfully connected to Qdrant instance",
+    "connection_failed": "Connection failed",
+    "version_detected": "Version: {version}",
+    "save": "Save Configuration",
+    "instance_configuration": "Configure {instance}",
+    "configuring": "Configuring...",
+    "invalid_port": "Port must be between 1 and 65535",
+    "invalid_collection_size_limit": "Collection size limit must be non-negative",
+    "host_required": "Host is required",
+    "host_already_used": "This host is already in use by another service",
+    "invalid_hostname": "Invalid hostname format",
+    "hostname_already_used": "This hostname is already in use",
+    "path_must_start_with_slash": "Path must start with /",
+    "port_out_of_range": "Port must be between 1024 and 65535",
+    "port_invalid": "Invalid port number",
+    "collection_size_limit_invalid": "Collection size limit must be a positive number"
+  },
+  "about": {
+    "title": "About"
+  },
+  "action": {
+    "get-status": "Get status",
+    "get-configuration": "Get configuration",
+    "configure-module": "Configure module",
+    "test-connection": "Test connection",
+    "get-name": "Get name",
+    "list-installed-modules": "List installed modules"
+  },
+  "error": {
+    "generic_error": "Something went wrong",
+    "cannot_retrieve_installed_modules": "Cannot retrieve installed modules",
+    "cannot_retrieve_module_info": "Cannot retrieve module info"
+  },
+  "common": {
+    "required": "This field is required",
+    "advanced": "Advanced",
+    "version": "Version"
+  },
+  "task": {
+    "cannot_create_task": "Cannot create task {action}"
+  }
+}

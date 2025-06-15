@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+# Clean up state files and data
+rm -vf config.json
+rm -vf qdrant.env

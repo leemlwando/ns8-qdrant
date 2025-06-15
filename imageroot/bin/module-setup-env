@@ -1,16 +1,46 @@
 #!/bin/bash
+
+#
+# Copyright (C) 2023 Lee M. Lwando
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
 set -e
+
+# Configure environment for Qdrant module first time setup
 if [[ ! -f environment ]]; then
-    echo "Qdrant database first-time environment setup..."
+    echo "Qdrant vector database module first-time setup..."
+    
+    # Qdrant container image
     echo "QDRANT_IMAGE=docker.io/qdrant/qdrant:latest" > environment
+    
+    # Default FQDN for Qdrant service
     DEFAULT_FQDN="qdrant.$(cat /etc/nethserver/fqdn)"
     echo "QDRANT_HOST=${DEFAULT_FQDN}" >> environment
     echo "QDRANT_PATH=" >> environment
     echo "QDRANT_LETS_ENCRYPT=false" >> environment
     echo "QDRANT_HTTP2HTTPS=false" >> environment
+    
+    # Qdrant service ports
     echo "QDRANT_PORT=6333" >> environment
     echo "QDRANT_GRPC_PORT=6334" >> environment
+    
+    # Qdrant configuration
     echo "QDRANT_API_KEY=" >> environment
     echo "QDRANT_COLLECTION_SIZE_LIMIT=10000" >> environment
     echo "QDRANT_ENABLE_CORS=true" >> environment
+    
+    # Initialize config.json for configuration persistence
+    cat > config.json <<'EOF'
+{
+  "host": "",
+  "path": "",
+  "lets_encrypt": false,
+  "http2https": false,
+  "port": 6333,
+  "api_key": "",
+  "collection_size_limit": 10000,
+  "enable_cors": true
+}
+EOF
 fi

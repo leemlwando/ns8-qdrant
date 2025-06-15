@@ -29,7 +29,7 @@ ExecStart=/usr/bin/podman run \
     --env=QDRANT__CLUSTER__ENABLED=false \
     ${QDRANT_API_KEY:+--env=QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY}} \
     ${QDRANT_COLLECTION_SIZE_LIMIT:+--env=QDRANT__STORAGE__COLLECTION_SIZE_LIMIT=${QDRANT_COLLECTION_SIZE_LIMIT}} \
-    docker.io/qdrant/qdrant:latest
+    ${QDRANT_IMAGE:-docker.io/qdrant/qdrant:latest}
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%n.ctr-id -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%n.ctr-id
 SyslogIdentifier=%N
