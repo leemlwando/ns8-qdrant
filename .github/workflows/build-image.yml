@@ -51,7 +51,14 @@ jobs:
             for image in "${image_array[@]}"; do
               if [[ -n "$image" ]]; then
                 echo "Pushing image: $image"
+                # Push with branch/tag name
                 buildah push "$image" docker://"$image":${GITHUB_REF_NAME/\//-}
+                # Always push latest tag for main branch
+                if [[ "$GITHUB_REF_NAME" == "main" ]]; then
+                  buildah tag "$image" "$image":latest
+                  buildah push "$image" docker://"$image":latest
+                fi
+                # Push latest tag for version tags
                 if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
                   buildah tag "$image" "$image":latest
                   buildah push "$image" docker://"$image":latest
