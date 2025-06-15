@@ -10,7 +10,7 @@ default_config = {
     "host": "",
     "path": "",
     "lets_encrypt": False,
-    "http2https": False,
+    "http_to_https": False,
     "port": 6333,
     "api_key": "",
     "collection_size_limit": 10000,
@@ -20,9 +20,7 @@ default_config = {
 try:
     with open(config_file, 'r') as f:
         config = json.load(f)
-        # Merge with defaults to ensure all fields are present
-        merged_config = {**default_config, **config}
 except FileNotFoundError:
-    merged_config = default_config
+    config = default_config
 
-json.dump(merged_config, fp=sys.stdout)
+json.dump({"configuration": config}, fp=sys.stdout)

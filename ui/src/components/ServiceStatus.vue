@@ -1,9 +1,8 @@
 <template>
   <div class="service-status">
-    <div class="status-indicator">
-      <div 
+    <div class="status-indicator">      <div 
         class="status-badge"
-        :class="`status-badge--${status.status}`"
+        :class="`status-badge--${status.status === 'active' ? 'running' : status.status === 'inactive' ? 'stopped' : status.status}`"
       >
         <div class="status-icon">
           <svg v-if="status.status === 'running'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -28,10 +27,9 @@
       </div>
     </div>
 
-    <div class="service-controls">
-      <button
+    <div class="service-controls">      <button
         @click="controlService('start')"
-        :disabled="status.status === 'running' || controlling"
+        :disabled="status.status === 'active' || controlling"
         class="control-btn control-btn--start"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -42,7 +40,7 @@
 
       <button
         @click="controlService('stop')"
-        :disabled="status.status !== 'running' || controlling"
+        :disabled="status.status !== 'active' || controlling"
         class="control-btn control-btn--stop"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -85,9 +83,9 @@ const controlling = ref(false)
 
 const statusText = computed(() => {
   switch (props.status.status) {
-    case 'running':
+    case 'active':
       return 'Running'
-    case 'stopped':
+    case 'inactive':
       return 'Stopped'
     case 'failed':
       return 'Failed'

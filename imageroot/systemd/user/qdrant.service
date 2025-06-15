@@ -19,10 +19,17 @@ ExecStart=/usr/bin/podman run \
     --cidfile=%t/%n.ctr-id \
     --cgroups=no-conmon \
     --replace --name=%N \
-    --publish=127.0.0.1:${TCP_PORT_0}:6333 \
-    --publish=127.0.0.1:${TCP_PORT_1}:6334 \
+    --publish=127.0.0.1:${QDRANT_PORT:-6333}:6333 \
+    --publish=127.0.0.1:${QDRANT_GRPC_PORT:-6334}:6334 \
     --volume=qdrant-data:/qdrant/storage:Z \
-    ${QDRANT_IMAGE}
+    --env=QDRANT__SERVICE__HTTP_PORT=6333 \
+    --env=QDRANT__SERVICE__GRPC_PORT=6334 \
+    --env=QDRANT__STORAGE__STORAGE_PATH=/qdrant/storage \
+    --env=QDRANT__SERVICE__ENABLE_CORS=${QDRANT_ENABLE_CORS:-true} \
+    --env=QDRANT__CLUSTER__ENABLED=false \
+    ${QDRANT_API_KEY:+--env=QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY}} \
+    ${QDRANT_COLLECTION_SIZE_LIMIT:+--env=QDRANT__STORAGE__COLLECTION_SIZE_LIMIT=${QDRANT_COLLECTION_SIZE_LIMIT}} \
+    docker.io/qdrant/qdrant:latest
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/%n.ctr-id -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/%n.ctr-id
 SyslogIdentifier=%N

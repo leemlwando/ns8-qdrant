@@ -3,9 +3,13 @@ import { ref } from 'vue'
 import * as api from '@/services/api'
 
 export interface ServiceStatus {
-  status: 'running' | 'stopped' | 'failed' | 'unknown'
+  status: 'active' | 'inactive' | 'failed' | 'unknown'
   uptime?: number
-  version?: string
+  qdrant_info?: {
+    version?: string
+    collections_count?: number
+    total_points?: number
+  } | null
 }
 
 export const useServiceStore = defineStore('service', () => {

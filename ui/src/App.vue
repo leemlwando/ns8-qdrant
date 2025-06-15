@@ -66,9 +66,7 @@
               <span class="help-text">
                 The public domain name for accessing Qdrant (e.g., qdrant.yourdomain.com)
               </span>
-            </div>
-
-            <!-- Path Prefix -->
+            </div>            <!-- Path Prefix -->
             <div class="form-group">
               <label for="path" class="form-label">Path Prefix</label>
               <input
@@ -84,6 +82,84 @@
               </span>
               <span class="help-text">
                 Optional URL path to serve Qdrant from (e.g., /qdrant)
+              </span>
+            </div>
+
+            <!-- Port Configuration -->
+            <div class="form-group">
+              <label for="port" class="form-label">Port</label>
+              <input
+                id="port"
+                v-model="configStore.config.port"
+                type="number"
+                class="form-input"
+                :class="{ 'error': configStore.errors.port }"
+                min="1"
+                max="65535"
+                placeholder="6333"
+              />
+              <span v-if="configStore.errors.port" class="error-message">
+                {{ configStore.errors.port }}
+              </span>
+              <span class="help-text">
+                Port number for Qdrant service (default: 6333)
+              </span>
+            </div>
+
+            <!-- API Key Configuration -->
+            <div class="form-group">
+              <label for="api_key" class="form-label">API Key</label>
+              <input
+                id="api_key"
+                v-model="configStore.config.api_key"
+                type="password"
+                class="form-input"
+                :class="{ 'error': configStore.errors.api_key }"
+                placeholder="Optional API key for authentication"
+              />
+              <span v-if="configStore.errors.api_key" class="error-message">
+                {{ configStore.errors.api_key }}
+              </span>
+              <span class="help-text">
+                Optional API key for authenticating requests to Qdrant
+              </span>
+            </div>
+
+            <!-- Collection Size Limit -->
+            <div class="form-group">
+              <label for="collection_size_limit" class="form-label">Collection Size Limit</label>
+              <input
+                id="collection_size_limit"
+                v-model="configStore.config.collection_size_limit"
+                type="number"
+                class="form-input"
+                :class="{ 'error': configStore.errors.collection_size_limit }"
+                min="0"
+                placeholder="10000"
+              />
+              <span v-if="configStore.errors.collection_size_limit" class="error-message">
+                {{ configStore.errors.collection_size_limit }}
+              </span>
+              <span class="help-text">
+                Maximum number of points allowed per collection
+              </span>
+            </div>
+
+            <!-- CORS Configuration -->
+            <div class="form-group">
+              <div class="checkbox-group">
+                <input
+                  id="enable_cors"
+                  v-model="configStore.config.enable_cors"
+                  type="checkbox"
+                  class="form-checkbox"
+                />
+                <label for="enable_cors" class="checkbox-label">
+                  Enable CORS
+                </label>
+              </div>
+              <span class="help-text">
+                Allow cross-origin requests from web browsers
               </span>
             </div>
 
@@ -160,9 +236,7 @@
               </button>
             </div>
           </form>
-        </div>
-
-        <!-- Access Information -->
+        </div>        <!-- Access Information -->
         <div v-if="configStore.config.host && !configStore.loading" class="info-card">
           <h3>Access Information</h3>
           <div class="access-info">
@@ -176,6 +250,9 @@
             </div>
           </div>
         </div>
+
+        <!-- Qdrant Information -->
+        <QdrantInfo v-if="serviceStore.status && serviceStore.status.status === 'active'" :status="serviceStore.status" />
       </main>
     </div>
   </div>
@@ -188,6 +265,7 @@ import { useNotificationStore } from '@/stores/notifications'
 import { useServiceStore } from '@/stores/service'
 import ServiceStatus from '@/components/ServiceStatus.vue'
 import Notification from '@/components/Notification.vue'
+import QdrantInfo from '@/components/QdrantInfo.vue'
 
 const configStore = useConfigStore()
 const notificationStore = useNotificationStore()
@@ -217,11 +295,14 @@ const handleSave = async () => {
 
 const handleTestConnection = async () => {
   try {
-    const success = await configStore.testConnection()
-    if (success) {
-      notificationStore.show('success', 'Connection Test', 'Successfully connected to Qdrant instance.')
+    const result = await configStore.testConnection()
+    if (result.success) {
+      const message = result.version 
+        ? `Successfully connected to Qdrant instance (Version: ${result.version})`
+        : 'Successfully connected to Qdrant instance.'
+      notificationStore.show('success', 'Connection Test', message)
     } else {
-      notificationStore.show('error', 'Connection Test Failed', 'Could not connect to Qdrant instance.')
+      notificationStore.show('error', 'Connection Test Failed', result.error || 'Could not connect to Qdrant instance.')
     }
   } catch (error) {
     notificationStore.show('error', 'Connection Test Error', error instanceof Error ? error.message : 'Test failed')

@@ -12,17 +12,50 @@ host = data.get('host', '')
 path = data.get('path', '')
 lets_encrypt = data.get('lets_encrypt', False)
 http2https = data.get('http2https', False)
+port = int(data.get('port', 6333))
+api_key = data.get('api_key', '')
+collection_size_limit = int(data.get('collection_size_limit', 10000))
+enable_cors = data.get('enable_cors', True)
+
+# Save configuration to persistent storage
+config_file = os.environ.get('AGENT_STATE_DIR', '.') + '/config.json'
+config = {
+    "host": host,
+    "path": path,
+    "lets_encrypt": lets_encrypt,
+    "http2https": http2https,
+    "port": port,
+    "api_key": api_key,
+    "collection_size_limit": collection_size_limit,
+    "enable_cors": enable_cors
+}
+
+with open(config_file, 'w') as f:
+    json.dump(config, f, indent=2)
 
 # Set environment variables for the module
 agent.set_env('QDRANT_HOST', host)
 agent.set_env('QDRANT_PATH', path)
 agent.set_env('QDRANT_LETS_ENCRYPT', str(lets_encrypt).lower())
 agent.set_env('QDRANT_HTTP2HTTPS', str(http2https).lower())
+agent.set_env('QDRANT_PORT', str(port))
+agent.set_env('QDRANT_API_KEY', api_key)
+agent.set_env('QDRANT_COLLECTION_SIZE_LIMIT', str(collection_size_limit))
+agent.set_env('QDRANT_ENABLE_CORS', str(enable_cors).lower())
+
+# Update environment file for container
+env_file = os.environ.get('AGENT_STATE_DIR', '.') + '/environment'
+with open(env_file, 'w') as f:
+    f.write(f"QDRANT_PORT={port}\n")
+    if api_key:
+        f.write(f"QDRANT_API_KEY={api_key}\n")
+    f.write(f"QDRANT_COLLECTION_SIZE_LIMIT={collection_size_limit}\n")
+    f.write(f"QDRANT_ENABLE_CORS={'true' if enable_cors else 'false'}\n")
 
 # Configure Traefik route by calling the traefik agent
 route_data = {
     'instance': os.environ['MODULE_ID'],
-    'url': f'http://127.0.0.1:{os.environ["TCP_PORT_1"]}',
+    'url': f'http://127.0.0.1:{port}',
     'host': host,
     'lets_encrypt': lets_encrypt,
     'http2https': http2https,
@@ -38,5 +71,7 @@ response = agent.tasks.run(
 
 agent.assert_exp(response['exit_code'] == 0, f"Failed to set traefik route: {response.get('error')}")
 
-# Gently restart the service to ensure it's running, though not strictly needed for route changes
+# Restart the service to apply new configuration
 agent.run_helper('systemctl', '--user', 'restart', 'qdrant.service')
+
+print("Configuration applied successfully")

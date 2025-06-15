@@ -2,10 +2,15 @@
 set -e
 if [[ ! -f environment ]]; then
     echo "Qdrant database first-time environment setup..."
-    echo "QDRANT_IMAGE=docker.io/qdrant/qdrant" > environment
+    echo "QDRANT_IMAGE=docker.io/qdrant/qdrant:latest" > environment
     DEFAULT_FQDN="qdrant.$(cat /etc/nethserver/fqdn)"
     echo "QDRANT_HOST=${DEFAULT_FQDN}" >> environment
     echo "QDRANT_PATH=" >> environment
     echo "QDRANT_LETS_ENCRYPT=false" >> environment
     echo "QDRANT_HTTP2HTTPS=false" >> environment
+    echo "QDRANT_PORT=6333" >> environment
+    echo "QDRANT_GRPC_PORT=6334" >> environment
+    echo "QDRANT_API_KEY=" >> environment
+    echo "QDRANT_COLLECTION_SIZE_LIMIT=10000" >> environment
+    echo "QDRANT_ENABLE_CORS=true" >> environment
 fi

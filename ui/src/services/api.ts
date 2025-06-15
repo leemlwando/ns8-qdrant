@@ -52,10 +52,14 @@ export async function saveConfiguration(config: QdrantConfig): Promise<void> {
   }
 }
 
-export async function testConnection(config: QdrantConfig): Promise<{ success: boolean; error?: string }> {
+export async function testConnection(config: QdrantConfig): Promise<{ success: boolean; error?: string; version?: string }> {
   try {
     const response = await apiClient.post('/test-connection', config)
-    return response.data
+    return {
+      success: response.data.connection_successful || false,
+      version: response.data.qdrant_version,
+      error: response.data.error
+    }
   } catch (error) {
     console.error('Connection test failed:', error)
     return {

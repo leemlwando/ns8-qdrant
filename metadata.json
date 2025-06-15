@@ -2,11 +2,12 @@
   "id": "qdrant",
   "name": "Qdrant Vector Database",
   "description": {
-    "en": "High-performance vector database for AI and machine learning applications"
+    "en": "High-performance vector database for AI applications and similarity search with modern web interface"
   },
   "categories": [
     "Development",
-    "Database"
+    "Database",
+    "AI"
   ],
   "authors": [
     {
@@ -22,13 +23,13 @@
   "source": "ghcr.io/leemlwando/ns8-qdrant",
   "versions": [
     {
-      "tag": "1.0.0",
+      "tag": "2.0.0",
       "testing": false,
       "labels": {
         "org.nethserver.authorizations": "traefik@node:routeadm",
         "org.nethserver.tcp-ports-demand": "2",
         "org.nethserver.rootfull": "0",
-        "org.nethserver.images": "docker.io/qdrant/qdrant:v1.9.0"
+        "org.nethserver.images": "docker.io/qdrant/qdrant:latest"
       }
     }
   ]

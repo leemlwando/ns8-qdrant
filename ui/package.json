@@ -8,13 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit"
-  },
-  "dependencies": {
+  },  "dependencies": {
     "vue": "^3.4.0",
     "vue-router": "^4.2.0",
     "pinia": "^2.1.0",
     "@vueuse/core": "^10.5.0",
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "@carbon/icons-vue": "^11.19.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.0",
