@@ -66,8 +66,8 @@ jobs:
           # Run the build script
           ./build-images.sh
           
-          # Output the image name for later steps
-          echo "image=$REPOBASE" >> $GITHUB_OUTPUT
+          # Output the image name for later steps  
+          echo "image=$REPOBASE/ns8-qdrant" >> $GITHUB_OUTPUT
           echo "tag=$IMAGETAG" >> $GITHUB_OUTPUT
 
       - name: Push to registry
@@ -78,9 +78,6 @@ jobs:
         run: |
           # Push the image with the computed tag
           buildah push "$IMAGE" "docker://$IMAGE:$TAG"
-          
-          # Also push as 'latest' if this is main/master branch
-          if [[ "${{ github.ref_name }}" == "main" || "${{ github.ref_name }}" == "master" ]]; then
             buildah push "$IMAGE" "docker://$IMAGE:latest"
           fi
           
