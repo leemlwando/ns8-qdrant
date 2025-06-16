@@ -1,8 +1,31 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "get-configuration output",
-    "$id": "http://schema.nethserver.org/kickstart/get-configuration-output.json",
-    "description": "Get kickstart configuration",
-    "examples": [],
-    "type": "object"
+    "$id": "http://schema.nethserver.org/qdrant/get-configuration-output.json",
+    "description": "Get Qdrant configuration",
+    "type": "object",
+    "properties": {
+        "http_port": {
+            "type": "integer",
+            "description": "HTTP API port"
+        },
+        "grpc_port": {
+            "type": "integer",
+            "description": "gRPC API port"
+        },
+        "api_key": {
+            "type": "string",
+            "description": "API key for authentication"
+        },
+        "log_level": {
+            "type": "string",
+            "description": "Logging level"
+        },
+        "storage_path": {
+            "type": "string",
+            "description": "Storage path for data"
+        }
+    },
+    "required": ["http_port", "grpc_port", "api_key", "log_level", "storage_path"],
+    "additionalProperties": false
 }

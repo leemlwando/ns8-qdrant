@@ -7,7 +7,9 @@
         {
             "http_port": 6333,
             "grpc_port": 6334,
-            "api_key": "your-secret-api-key"
+            "api_key": "your-secret-api-key",
+            "log_level": "INFO",
+            "storage_path": ""
         }
     ],
     "type": "object",
@@ -28,7 +30,20 @@
         },
         "api_key": {
             "type": "string",
-            "description": "Optional API key for authentication"
+            "description": "API key for securing Qdrant access",
+            "default": ""
+        },
+        "log_level": {
+            "type": "string",
+            "enum": ["TRACE", "DEBUG", "INFO", "WARN", "ERROR"],
+            "default": "INFO",
+            "description": "Qdrant logging level"
+        },
+        "storage_path": {
+            "type": "string",
+            "description": "Custom storage path for Qdrant data",
+            "default": ""
         }
-    }
+    },
+    "additionalProperties": false
 }

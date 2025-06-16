@@ -17,13 +17,72 @@ request = json.load(sys.stdin)
 http_port = request.get('http_port', 6333)
 grpc_port = request.get('grpc_port', 6334)
 api_key = request.get('api_key', '')
+log_level = request.get('log_level', 'INFO')
+storage_path = request.get('storage_path', '')
 
 # Set environment variables for the service
 agent.set_env('HTTP_PORT', str(http_port))
 agent.set_env('GRPC_PORT', str(grpc_port))
 agent.set_env('QDRANT_IMAGE', 'qdrant/qdrant:latest')
+agent.set_env('LOG_LEVEL', log_level)
+
+# Set default storage path if not provided
+if not storage_path:
+    storage_path = './data'
+agent.set_env('STORAGE_PATH', storage_path)
+
+# Set API key if provided
 if api_key:
-    agent.set_env('QDRANT__SERVICE__API_KEY', api_key)
+    agent.set_env('API_KEY', api_key)
+else:
+    agent.unset_env('API_KEY')
+
+# Create Qdrant configuration file
+qdrant_config = {
+    'log_level': log_level,
+    'storage': {
+        'storage_path': storage_path,
+        'snapshots_path': './snapshots',
+        'wal_capacity_mb': 32,
+        'wal_segments_ahead': 0
+    },
+    'service': {
+        'http_port': http_port,
+        'grpc_port': grpc_port,
+        'enable_cors': True,
+        'max_request_size_mb': 32,
+        'max_workers': 0,
+        'host': '0.0.0.0'
+    },
+    'cluster': {
+        'enabled': False
+    },
+    'telemetry': {
+        'disabled': True
+    }
+}
+
+# Add API key to config if provided
+if api_key:
+    qdrant_config['service']['api_key'] = api_key
+
+# Write configuration file
+import yaml
+os.makedirs('config', exist_ok=True)
+with open('config/production.yaml', 'w') as f:
+    yaml.dump(qdrant_config, f, default_flow_style=False)
+
+# Store module configuration for get-configuration action
+module_config = {
+    'http_port': http_port,
+    'grpc_port': grpc_port,
+    'api_key': api_key,
+    'log_level': log_level,
+    'storage_path': storage_path
+}
+
+with open('config/module_config.json', 'w') as f:
+    json.dump(module_config, f, indent=2)
 
 # Configure Traefik to route "/qdrant" path requests to the qdrant service
 response = agent.tasks.run(
@@ -31,7 +90,7 @@ response = agent.tasks.run(
     action='set-route',
     data={
         'instance': os.environ['MODULE_ID'],
-        'url':  'http://127.0.0.1:' + str(http_port),
+        'url': f'http://127.0.0.1:{http_port}',
         'http2https': False,
         'lets_encrypt': False,
         'path': '/qdrant',

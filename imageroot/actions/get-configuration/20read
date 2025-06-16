@@ -8,11 +8,31 @@
 import json
 import sys
 import agent
+import os
 
-config = {
-    "http_port": int(agent.get_env('HTTP_PORT', '6333')),
-    "grpc_port": int(agent.get_env('GRPC_PORT', '6334')),
-    "api_key_set": bool(agent.get_env('QDRANT__SERVICE__API_KEY', ''))
+# Default configuration
+default_config = {
+    "http_port": 6333,
+    "grpc_port": 6334,
+    "api_key": "",
+    "log_level": "INFO",
+    "storage_path": ""
 }
+
+# Try to read saved configuration
+config_file = 'config/module_config.json'
+if os.path.exists(config_file):
+    try:
+        with open(config_file, 'r') as f:
+            config = json.load(f)
+    except (json.JSONDecodeError, IOError):
+        config = default_config
+else:
+    config = default_config
+
+# Ensure all required fields are present
+for key, value in default_config.items():
+    if key not in config:
+        config[key] = value
 
 json.dump(config, fp=sys.stdout)

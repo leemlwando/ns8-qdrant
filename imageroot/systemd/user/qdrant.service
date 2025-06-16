@@ -17,6 +17,7 @@ WorkingDirectory=%S/state
 Restart=always
 ExecStartPre=/bin/rm -f %t/qdrant.pid %t/qdrant.ctr-id
 ExecStartPre=-runagent discover-smarthost
+ExecStartPre=/bin/mkdir -p data snapshots config
 ExecStart=/usr/bin/podman run \
     --detach \
     --conmon-pidfile=%t/qdrant.pid \
@@ -25,11 +26,19 @@ ExecStart=/usr/bin/podman run \
     --replace --name=%N \
     --publish=127.0.0.1:${HTTP_PORT}:6333 \
     --publish=127.0.0.1:${GRPC_PORT}:6334 \
-    --volume=qdrant_storage:/qdrant/storage:Z \
+    --volume=./data:/qdrant/storage:Z \
+    --volume=./snapshots:/qdrant/snapshots:Z \
+    --volume=./config/production.yaml:/qdrant/config/production.yaml:Z,ro \
     --env-file=smarthost.env \
-    ${QDRANT_IMAGE}
+    ${QDRANT_IMAGE} \
+    ./qdrant --config-path config/production.yaml
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/qdrant.ctr-id -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/qdrant.ctr-id
+PIDFile=%t/qdrant.pid
+Type=forking
+
+[Install]
+WantedBy=default.target
 PIDFile=%t/kickstart.pid
 Type=forking
 
