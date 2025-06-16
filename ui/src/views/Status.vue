@@ -1,5 +1,5 @@
 <!--
-  Copyright (C) 2024 Nethesis S.r.l.
+  Copyright (C) 2023 Nethesis S.r.l.
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <template>
@@ -15,6 +15,26 @@
           kind="error"
           :title="$t('action.get-status')"
           :description="error.getStatus"
+          :showCloseButton="false"
+        />
+      </cv-column>
+    </cv-row>
+    <cv-row v-if="error.listBackupRepositories">
+      <cv-column>
+        <NsInlineNotification
+          kind="error"
+          :title="$t('action.list-backup-repositories')"
+          :description="error.listBackupRepositories"
+          :showCloseButton="false"
+        />
+      </cv-column>
+    </cv-row>
+    <cv-row v-if="error.listBackups">
+      <cv-column>
+        <NsInlineNotification
+          kind="error"
+          :title="$t('action.list-backups')"
+          :description="error.listBackups"
           :showCloseButton="false"
         />
       </cv-column>
@@ -42,13 +62,46 @@
         />
       </cv-column>
       <cv-column :md="4" :max="4">
-        <NsInfoCard
+        <NsBackupCard
+          :title="core.$t('backup.title')"
+          :noBackupMessage="core.$t('backup.no_backup_configured')"
+          :goToBackupLabel="core.$t('backup.go_to_backup')"
+          :repositoryLabel="core.$t('backup.repository')"
+          :statusLabel="core.$t('common.status')"
+          :statusSuccessLabel="core.$t('common.success')"
+          :statusNotRunLabel="core.$t('backup.backup_has_not_run_yet')"
+          :statusErrorLabel="core.$t('error.error')"
+          :completedLabel="core.$t('backup.completed')"
+          :durationLabel="core.$t('backup.duration')"
+          :totalSizeLabel="core.$t('backup.total_size')"
+          :totalFileCountLabel="core.$t('backup.total_file_count')"
+          :backupDisabledLabel="core.$t('common.disabled')"
+          :showMoreLabel="core.$t('common.show_more')"
+          :multipleUncertainStatusLabel="
+            core.$t('backup.some_backups_failed_or_are_pending')
+          "
+          :moduleId="instanceName"
+          :moduleUiName="instanceLabel"
+          :repositories="backupRepositories"
+          :backups="backups"
+          :loading="loading.listBackupRepositories || loading.listBackups"
+          :coreContext="core"
           light
-          :title="status.tcp_port ? status.tcp_port.toString() : '-'"
-          :description="$t('status.tcp_port')"
-          :icon="Connect32"
-          :loading="loading.getStatus"
-          class="min-height-card"
+        />
+      </cv-column>
+      <cv-column :md="4" :max="4">
+        <NsSystemLogsCard
+          :title="core.$t('system_logs.card_title')"
+          :description="
+            core.$t('system_logs.card_description', {
+              name: instanceLabel || instanceName,
+            })
+          "
+          :buttonLabel="core.$t('system_logs.card_button_label')"
+          :router="core.$router"
+          context="module"
+          :moduleId="instanceName"
+          light
         />
       </cv-column>
     </cv-row>
@@ -59,7 +112,7 @@
       </cv-column>
     </cv-row>
     <cv-row v-if="!loading.getStatus">
-      <cv-column v-if="!status.services || !status.services.length">
+      <cv-column v-if="!status.services.length">
         <cv-tile light>
           <NsEmptyState :title="$t('status.no_services')"> </NsEmptyState>
         </cv-tile>
@@ -103,7 +156,7 @@
         <cv-tile light>
           <div v-if="!loading.getStatus">
             <NsEmptyState
-              v-if="!status.images || !status.images.length"
+              v-if="!status.images.length"
               :title="$t('status.no_images')"
             >
             </NsEmptyState>
@@ -156,7 +209,7 @@
         <cv-tile light>
           <div v-if="!loading.getStatus">
             <NsEmptyState
-              v-if="!status.volumes || !status.volumes.length"
+              v-if="!status.volumes.length"
               :title="$t('status.no_volumes')"
             >
             </NsEmptyState>
@@ -230,27 +283,44 @@ export default {
         page: "status",
       },
       urlCheckInterval: null,
-      status: {},
+      isRedirectChecked: false,
+      redirectTimeout: 0,
+      status: {
+        instance: "",
+        services: [],
+        images: [],
+        volumes: [],
+      },
+      backupRepositories: [],
+      backups: [],
       loading: {
         getStatus: false,
+        listBackupRepositories: false,
+        listBackups: false,
       },
       error: {
         getStatus: "",
+        listBackupRepositories: "",
+        listBackups: "",
       },
     };
   },
   computed: {
     ...mapState(["instanceName", "instanceLabel", "core", "appName"]),
     installationNodeTitle() {
-      if (this.status && this.status.node_id) {
-        return this.getNodeNameFromNodeId(this.status.node_id);
+      if (this.status && this.status.node) {
+        if (this.status.node_ui_name) {
+          return this.status.node_ui_name;
+        } else {
+          return this.$t("status.node") + " " + this.status.node;
+        }
       } else {
         return "-";
       }
     },
     installationNodeTitleTooltip() {
-      if (this.status && this.status.node_id) {
-        return this.$t("common.node_id", { id: this.status.node_id });
+      if (this.status && this.status.node_ui_name) {
+        return this.$t("status.node") + " " + this.status.node;
       } else {
         return "";
       }
@@ -266,8 +336,18 @@ export default {
     clearInterval(this.urlCheckInterval);
     next();
   },
+  mounted() {
+    this.redirectTimeout = setTimeout(
+      () => (this.isRedirectChecked = true),
+      200
+    );
+  },
+  beforeUnmount() {
+    clearTimeout(this.redirectTimeout);
+  },
   created() {
     this.getStatus();
+    this.listBackupRepositories();
   },
   methods: {
     async getStatus() {
@@ -313,8 +393,117 @@ export default {
       this.loading.getStatus = false;
     },
     getStatusCompleted(taskContext, taskResult) {
-      this.loading.getStatus = false;
       this.status = taskResult.output;
+      this.loading.getStatus = false;
+    },
+    async listBackupRepositories() {
+      this.loading.listBackupRepositories = true;
+      this.error.listBackupRepositories = "";
+      const taskAction = "list-backup-repositories";
+      const eventId = this.getUuid();
+
+      // register to task error
+      this.core.$root.$once(
+        `${taskAction}-aborted-${eventId}`,
+        this.listBackupRepositoriesAborted
+      );
+
+      // register to task completion
+      this.core.$root.$once(
+        `${taskAction}-completed-${eventId}`,
+        this.listBackupRepositoriesCompleted
+      );
+
+      const res = await to(
+        this.createClusterTaskForApp({
+          action: taskAction,
+          extra: {
+            title: this.$t("action." + taskAction),
+            isNotificationHidden: true,
+            eventId,
+          },
+        })
+      );
+      const err = res[0];
+
+      if (err) {
+        console.error(`error creating task ${taskAction}`, err);
+        this.error.listBackupRepositories = this.getErrorMessage(err);
+        this.loading.listBackupRepositories = false;
+        return;
+      }
+    },
+    listBackupRepositoriesAborted(taskResult, taskContext) {
+      console.error(`${taskContext.action} aborted`, taskResult);
+      this.error.listBackupRepositories = this.$t("error.generic_error");
+      this.loading.listBackupRepositories = false;
+    },
+    listBackupRepositoriesCompleted(taskContext, taskResult) {
+      let backupRepositories = taskResult.output.repositories.sort(
+        this.sortByProperty("name")
+      );
+      this.backupRepositories = backupRepositories;
+      this.loading.listBackupRepositories = false;
+      this.listBackups();
+    },
+    async listBackups() {
+      this.loading.listBackups = true;
+      this.error.listBackups = "";
+      const taskAction = "list-backups";
+      const eventId = this.getUuid();
+
+      // register to task error
+      this.core.$root.$once(
+        `${taskAction}-aborted-${eventId}`,
+        this.listBackupsAborted
+      );
+
+      // register to task completion
+      this.core.$root.$once(
+        `${taskAction}-completed-${eventId}`,
+        this.listBackupsCompleted
+      );
+
+      const res = await to(
+        this.createClusterTaskForApp({
+          action: taskAction,
+          extra: {
+            title: this.$t("action." + taskAction),
+            isNotificationHidden: true,
+            eventId,
+          },
+        })
+      );
+      const err = res[0];
+
+      if (err) {
+        console.error(`error creating task ${taskAction}`, err);
+        this.error.listBackups = this.getErrorMessage(err);
+        this.loading.listBackups = false;
+        return;
+      }
+    },
+    listBackupsAborted(taskResult, taskContext) {
+      console.error(`${taskContext.action} aborted`, taskResult);
+      this.error.listBackups = this.$t("error.generic_error");
+      this.loading.listBackups = false;
+    },
+    listBackupsCompleted(taskContext, taskResult) {
+      let backups = taskResult.output.backups;
+      backups.sort(this.sortByProperty("name"));
+
+      // get repository name
+      for (const backup of backups) {
+        const repo = this.backupRepositories.find(
+          (r) => r.id == backup.repository
+        );
+
+        if (repo) {
+          backup.repoName = repo.name;
+        }
+      }
+      this.backups = backups;
+      this.loading.listBackups = false;
     },
   },
 };

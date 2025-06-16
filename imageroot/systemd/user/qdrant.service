@@ -1,45 +1,37 @@
+#
+# Copyright (C) 2025 Lee M. Lwando
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+#
+# This systemd unit starts a qdrant instance using Podman.
+# Most parts of this file come from podman-generate-systemd.
+#
 [Unit]
-Description=Qdrant vector database
-After=local-fs.target
+Description=qdrant vector database server
 
 [Service]
 Environment=PODMAN_SYSTEMD_UNIT=%n
 EnvironmentFile=%S/state/environment
-EnvironmentFile=-%S/state/smarthost.env
 WorkingDirectory=%S/state
-SyslogIdentifier=%N
 Restart=always
-TimeoutStopSec=70
-KillMode=mixed
-Type=notify
-NotifyAccess=all
-
-# Create qdrant data volume if it doesn't exist
-ExecStartPre=/usr/bin/podman volume create qdrant-data
-
-# Start Qdrant container
+ExecStartPre=/bin/rm -f %t/qdrant.pid %t/qdrant.ctr-id
+ExecStartPre=-runagent discover-smarthost
 ExecStart=/usr/bin/podman run \
     --detach \
-    --conmon-pidfile=%t/%N.pid \
-    --cidfile=%t/%N.cid \
+    --conmon-pidfile=%t/qdrant.pid \
+    --cidfile=%t/qdrant.ctr-id \
     --cgroups=no-conmon \
-    --replace \
-    --name=%N \
-    --publish=127.0.0.1:${TCP_PORT}:6333 \
-    --volume=qdrant-data:/qdrant/storage \
-    --env=QDRANT__SERVICE__HTTP_PORT=6333 \
-    --env=QDRANT__SERVICE__GRPC_PORT=6334 \
-    --env=QDRANT__LOG_LEVEL=INFO \
-    --env=QDRANT__SERVICE__ENABLE_CORS=true \
-    ${QDRANT_API_KEY:+--env=QDRANT__SERVICE__API_KEY=${QDRANT_API_KEY}} \
-    ${QDRANT_IMAGE:-docker.io/qdrant/qdrant:v1.7.4}
-
-# Stop and remove the container
-ExecStop=/usr/bin/podman stop --ignore --cidfile=%t/%N.cid
-ExecStopPost=/usr/bin/podman rm --ignore --force --cidfile=%t/%N.cid
-
-# Cleanup
-PIDFile=%t/%N.pid
+    --replace --name=%N \
+    --publish=127.0.0.1:${HTTP_PORT}:6333 \
+    --publish=127.0.0.1:${GRPC_PORT}:6334 \
+    --volume=qdrant_storage:/qdrant/storage:Z \
+    --env-file=smarthost.env \
+    ${QDRANT_IMAGE}
+ExecStop=/usr/bin/podman stop --ignore --cidfile %t/qdrant.ctr-id -t 10
+ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/qdrant.ctr-id
+PIDFile=%t/kickstart.pid
+Type=forking
 
 [Install]
 WantedBy=default.target

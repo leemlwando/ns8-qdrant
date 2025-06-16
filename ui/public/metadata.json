@@ -1,17 +1,12 @@
 {
-  "id": "ns8-qdrant",
-  "name": "NS8 Qdrant",
+  "name": "qdrant",
   "description": {
-    "en": "Vector database and similarity search engine for AI applications with support for embeddings and filtering"
+    "en": "Qdrant vector database - High-performance vector search engine"
   },
-  "categories": [
-    "database",
-    "ai",
-    "vector-search"
-  ],
+  "categories": ["database", "ai", "vector-search"],
   "authors": [
     {
-      "name": "Lee Mlwando",
+      "name": "Lee M. Lwando",
       "email": "leemlwando@gmail.com"
     }
   ],
@@ -20,6 +15,5 @@
     "bug_url": "https://github.com/leemlwando/ns8-qdrant/issues",
     "code_url": "https://github.com/leemlwando/ns8-qdrant"
   },
-  "source": "ghcr.io/leemlwando/ns8-qdrant",
-  "logo": "https://qdrant.tech/img/logo.svg"
+  "source": "ghcr.io/leemlwando/qdrant"
 }

@@ -1,128 +1,70 @@
 # ns8-qdrant
 
-Qdrant is a vector database and similarity search engine for building AI applications with vector embeddings. This NethServer 8 module provides a containerized deployment of Qdrant with a web-based management interface.
+Qdrant vector database module for [NethServer 8](https://github.com/NethServer/ns8-core).
 
-## Repository
+Qdrant is an open-source, high-performance vector search engine/database. It provides:
+- Fast and scalable vector similarity search
+- Hybrid search combining dense and sparse vectors
+- RESTful API and gRPC interface
+- Distributed deployment capabilities
+- Advanced filtering and metadata support
 
-- **Source Code**: [github.com/leemlwando/ns8-qdrant](https://github.com/leemlwando/ns8-qdrant)
-- **Package Location**: This package is maintained by [@leemlwando](https://github.com/leemlwando)
-- **Issues & Support**: [GitHub Issues](https://github.com/leemlwando/ns8-qdrant/issues)
-
-## Features
-
-- High-performance vector similarity search
-- Filterable and indexable vector database
-- RESTful API for integration
-- Web-based management interface
-- Automatic backup support
-- Let's Encrypt SSL certificate support
+This module provides an easy way to deploy and manage Qdrant instances on NethServer 8.
 
 ## Install
 
 Instantiate the module with:
 
-    add-module ghcr.io/leemlwando/ns8-qdrant:latest 1
+    add-module ghcr.io/leemlwando/qdrant:latest 1
 
 The output of the command will return the instance name.
 Output example:
 
-    {"module_id": "qdrant1", "image_name": "qdrant", "image_url": "ghcr.io/leemlwando/ns8-qdrant:latest"}
-
-## Development
-
-To build and test this module locally:
-
-```bash
-# Clone the repository
-git clone https://github.com/leemlwando/ns8-qdrant.git
-cd ns8-qdrant
-
-# Build the module
-./build-images.sh
-
-# Run tests
-./test-module.sh <NODE_ADDR> ghcr.io/leemlwando/ns8-qdrant:latest
-```
-
-### UI Development
-
-The web interface is built with Vue.js 2.7.x and is compatible with Node.js 22+:
-
-```bash
-cd ui
-yarn install
-yarn serve  # Development server
-yarn build  # Production build
-```
+    {"module_id": "qdrant1", "image_name": "qdrant", "image_url": "ghcr.io/leemlwando/qdrant:latest"}
 
 ## Configure
 
 Let's assume that the qdrant instance is named `qdrant1`.
 
 Launch `configure-module`, by setting the following parameters:
-- `host`: a fully qualified domain name for the Qdrant web interface
-- `http2https`: enable or disable HTTP to HTTPS redirection (true/false)
-- `lets_encrypt`: enable or disable Let's Encrypt certificate (true/false)
-- `api_key`: API key for authentication (optional)
+- `http_port`: HTTP API port (default: 6333)
+- `grpc_port`: gRPC API port (default: 6334)
+- `storage_path`: Path for data storage
+- `collection_settings`: Default collection configuration
+- `api_key`: Optional API key for authentication
 
 Example:
 
-```
-api-cli run configure-module --agent module/qdrant1 --data - <<EOF
-{
-  "host": "qdrant.domain.com",
-  "http2https": true,
-  "lets_encrypt": false,
-  "api_key": "your-secure-api-key"
-}
-EOF
-```
+    api-cli run module/qdrant1/configure-module --data '{"http_port": 6333, "grpc_port": 6334}'
 
 The above command will:
-- start and configure the Qdrant instance
-- configure a virtual host for Traefik to access the instance
+- start and configure the qdrant instance
+- set up the HTTP and gRPC ports
+- initialize the vector database
+- configure storage and collection settings
 
-## Access
+Send a test HTTP request to the qdrant backend service:
 
-After configuration, you can access:
-- Qdrant Web UI: `https://qdrant.domain.com` (or the configured host)
-- Qdrant API: `https://qdrant.domain.com/api` 
+    curl http://127.0.0.1:6333/collections
 
-## API Usage
+## Smarthost setting discovery
 
-Example of creating a collection and inserting vectors:
+Some configuration settings, like the smarthost setup, are not part of the
+`configure-module` action input: they are discovered by looking at some
+Redis keys.  To ensure the module is always up-to-date with the
+centralized [smarthost
+setup](https://nethserver.github.io/ns8-core/core/smarthost/) every time
+qdrant starts, the command `bin/discover-smarthost` runs and refreshes
+the `state/smarthost.env` file with fresh values from Redis.
 
-```bash
-# Create a collection
-curl -X PUT 'https://qdrant.domain.com/collections/test_collection' \
-    -H 'Content-Type: application/json' \
-    -H 'api-key: your-secure-api-key' \
-    --data-raw '{
-        "vectors": {
-            "size": 4,
-            "distance": "Dot"
-        }
-    }'
+Furthermore if smarthost setup is changed when qdrant is already
+running, the event handler `events/smarthost-changed/10reload_services`
+restarts the main module service.
 
-# Insert vectors
-curl -X PUT 'https://qdrant.domain.com/collections/test_collection/points' \
-    -H 'Content-Type: application/json' \
-    -H 'api-key: your-secure-api-key' \
-    --data-raw '{
-        "points": [
-            {"id": 1, "vector": [0.05, 0.61, 0.76, 0.74], "payload": {"city": "Berlin"}},
-            {"id": 2, "vector": [0.19, 0.81, 0.75, 0.11], "payload": {"city": "London"}}
-        ]
-    }'
-```
+See also the `systemd/user/qdrant.service` file.
 
-## Get the configuration
-
-You can retrieve the configuration with:
-
-```
-api-cli run get-configuration --agent module/qdrant1
-```
+This setting discovery is just an example to understand how the module is
+expected to work: it can be rewritten or discarded completely.
 
 ## Uninstall
 
@@ -134,23 +76,9 @@ To uninstall the instance:
 
 Test the module using the `test-module.sh` script:
 
-    ./test-module.sh <NODE_ADDR> ghcr.io/leemlwando/ns8-qdrant:latest
+    ./test-module.sh <NODE_ADDR> ghcr.io/leemlwando/qdrant:latest
 
 The tests are made using [Robot Framework](https://robotframework.org/)
-
-## Contributing
-
-1. Fork the repository: [github.com/leemlwando/ns8-qdrant](https://github.com/leemlwando/ns8-qdrant)
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes and ensure tests pass
-4. Submit a pull request
-
-## Changelog
-
-### Recent Updates
-- **Vue.js UI Modernization**: Updated to Vue 2.7.16 with Node.js 22+ compatibility
-- **Carbon Icons Fix**: Resolved icon import issues for better UI experience
-- **Build System**: Improved compatibility with modern development environments
 
 ## UI translation
 
@@ -159,14 +87,4 @@ Translated with [Weblate](https://hosted.weblate.org/projects/ns8/).
 To setup the translation process:
 
 - add [GitHub Weblate app](https://docs.weblate.org/en/latest/admin/continuous.html#github-setup) to your repository
-- add your repository to [hosted.weblate.org](https://hosted.weblate.org) or ask a NethServer developer to add it to ns8 Weblate project
-
-## License
-
-This project is licensed under the same terms as NethServer 8 modules.
-
-## About
-
-This ns8-qdrant module is maintained by [@leemlwando](https://github.com/leemlwando) and provides an easy way to deploy Qdrant vector database on NethServer 8 infrastructure.
-
-**Repository**: [github.com/leemlwando/ns8-qdrant](https://github.com/leemlwando/ns8-qdrant)
+- add your repository to [hosted.weblate.org]((https://hosted.weblate.org) or ask a NethServer developer to add it to ns8 Weblate project

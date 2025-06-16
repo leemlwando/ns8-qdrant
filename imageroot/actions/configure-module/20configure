@@ -1,76 +1,42 @@
 #!/usr/bin/env python3
 
 #
-# Copyright (C) 2024 Nethesis S.r.l.
+# Copyright (C) 2025 Lee M. Lwando
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-#
-# Configure module for NS8
-#
-
-import os
-import sys
 import json
+import sys
 import agent
 import agent.tasks
+import os
 
-# Try to parse the stdin as JSON.
-# If parsing fails, output everything to stderr
-data = json.load(sys.stdin)
+request = json.load(sys.stdin)
 
-# Setup default values
-host = data.get("host")
-http2https = data.get("http2https", True)
-lets_encrypt = data.get("lets_encrypt", False)
-api_key = data.get("api_key", "")
+# Extract configuration parameters for Qdrant
+http_port = request.get('http_port', 6333)
+grpc_port = request.get('grpc_port', 6334)
+api_key = request.get('api_key', '')
 
-# Talk with agent using file descriptor.
-# Setup configuration from user input.
-agent.set_env("TRAEFIK_HOST", host)
-agent.set_env("TRAEFIK_HTTP2HTTPS", str(http2https))
-agent.set_env("TRAEFIK_LETS_ENCRYPT", str(lets_encrypt))
-agent.set_env("QDRANT_API_KEY", api_key)
+# Set environment variables for the service
+agent.set_env('HTTP_PORT', str(http_port))
+agent.set_env('GRPC_PORT', str(grpc_port))
+agent.set_env('QDRANT_IMAGE', 'qdrant/qdrant:latest')
+if api_key:
+    agent.set_env('QDRANT__SERVICE__API_KEY', api_key)
 
-# Make sure everything is saved inside the environment file
-# just before starting systemd unit
-agent.dump_env()
-
-# Find default traefik instance for current node
-default_traefik_id = agent.resolve_agent_id('traefik@node')
-if default_traefik_id is None:
-    sys.exit(2)
-
-# Configure Traefik route
+# Configure Traefik to route "/qdrant" path requests to the qdrant service
 response = agent.tasks.run(
-    agent_id=default_traefik_id,
+    agent_id=agent.resolve_agent_id('traefik@node'),
     action='set-route',
     data={
         'instance': os.environ['MODULE_ID'],
-        'url': f'http://127.0.0.1:{os.environ["TCP_PORT"]}',
-        'http2https': http2https,
-        'lets_encrypt': lets_encrypt,
-        'host': host
+        'url':  'http://127.0.0.1:' + str(http_port),
+        'http2https': False,
+        'lets_encrypt': False,
+        'path': '/qdrant',
     },
 )
 
 # Check if traefik configuration has been successful
 agent.assert_exp(response['exit_code'] == 0)
-
-# Save configuration for later use
-config = {
-    'host': host,
-    'http2https': http2https,
-    'lets_encrypt': lets_encrypt,
-    'api_key': api_key
-}
-
-with open('config.json', 'w') as config_file:
-    json.dump(config, config_file)
-
-# Restart qdrant service to apply new configuration
-import subprocess
-try:
-    subprocess.run(['systemctl', '--user', 'restart', 'qdrant.service'], check=True)
-except subprocess.CalledProcessError as e:
-    print(f"Warning: Failed to restart qdrant service: {e}", file=sys.stderr)

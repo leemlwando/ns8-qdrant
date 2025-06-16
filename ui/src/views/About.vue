@@ -1,5 +1,5 @@
 <!--
-  Copyright (C) 2024 Nethesis S.r.l.
+  Copyright (C) 2023 Nethesis S.r.l.
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <template>
@@ -132,8 +132,8 @@
                     {{ app.authors[0].email }}
                   </cv-link>
                 </span>
-                <div v-else class="authors">
-                  <div
+                <ul v-else class="authors">
+                  <li
                     v-for="(author, index) in app.authors"
                     :key="index"
                     class="author"
@@ -147,8 +147,8 @@
                     >
                       {{ author.email }}
                     </cv-link>
-                  </div>
-                </div>
+                  </li>
+                </ul>
               </span>
             </div>
           </div>
@@ -170,6 +170,7 @@ import {
 
 export default {
   name: "About",
+  components: {},
   mixins: [TaskService, QueryParamService, UtilService, PageTitleService],
   pageTitle() {
     return this.$t("about.title") + " - " + this.appName;

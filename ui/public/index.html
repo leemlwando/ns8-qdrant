@@ -1,3 +1,7 @@
+<!--
+  Copyright (C) 2023 Nethesis S.r.l.
+  SPDX-License-Identifier: GPL-3.0-or-later
+-->
 <!DOCTYPE html>
 <html lang="">
   <head>
@@ -27,7 +31,8 @@
         border-bottom-color: transparent;
         border-radius: 50%;
         display: inline-block;
-        animation: rotation 1s linear infinite;
+        box-sizing: border-box;
+        animation: rotation 690ms linear infinite;
       }
 
       @keyframes rotation {
@@ -42,16 +47,14 @@
   </head>
   <body>
     <noscript>
-      <strong>
-        We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work
+      <strong
+        >We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work
         properly without JavaScript enabled. Please enable it to
-        continue.
-      </strong>
+        continue.</strong
+      >
     </noscript>
-    <div id="ns8-app">
-      <div class="loading-app">
-        <span class="loader"></span>
-      </div>
+    <div id="ns8-app" class="loading-app">
+      <span class="loader"></span>
     </div>
     <!-- built files will be auto injected -->
   </body>

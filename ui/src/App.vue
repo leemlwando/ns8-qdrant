@@ -1,5 +1,5 @@
 <!--
-  Copyright (C) 2024 Nethesis S.r.l.
+  Copyright (C) 2023 Nethesis S.r.l.
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <template>
@@ -33,15 +33,33 @@ export default {
   created() {
     const core = window.parent.core;
     this.setCoreInStore(core);
-    const instanceName = /#\/apps\/(\w+)/.exec(window.parent.location.hash)[1];
+    const instanceName = /#\/apps\/([a-zA-Z0-9_-]+)/.exec(
+      window.parent.location.hash
+    )[1];
     this.setInstanceNameInStore(instanceName);
     this.getInstanceLabel();
     this.setAppName();
 
     // listen to change route events
-    this.$router.afterEach(() => {
-      this.$root.$emit("appNavigation");
-    });
+    const context = this;
+    window.addEventListener(
+      "changeRoute",
+      function (e) {
+        const requestedPage = e.detail;
+        context.$router.replace(requestedPage);
+      },
+      false
+    );
+
+    // configure global shortcuts
+    core.$root.$emit("configureKeyboardShortcuts", window);
+
+    const queryParams = this.getQueryParamsForApp();
+    const requestedPage = queryParams.page || "status";
+
+    if (requestedPage != "status") {
+      this.$router.replace(requestedPage);
+    }
   },
   methods: {
     ...mapActions([

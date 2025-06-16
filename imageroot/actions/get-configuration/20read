@@ -1,34 +1,18 @@
 #!/usr/bin/env python3
 
 #
-# Copyright (C) 2024 Nethesis S.r.l.
+# Copyright (C) 2025 Lee M. Lwando
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-#
-# Read configuration for NS8
-#
-
-import os
-import sys
 import json
+import sys
+import agent
 
-# Prepare return variable
-config = {}
+config = {
+    "http_port": int(agent.get_env('HTTP_PORT', '6333')),
+    "grpc_port": int(agent.get_env('GRPC_PORT', '6334')),
+    "api_key_set": bool(agent.get_env('QDRANT__SERVICE__API_KEY', ''))
+}
 
-# Read current configuration from the environment file and JSON config
-try:
-    with open('config.json', 'r') as config_file:
-        config = json.load(config_file)
-except FileNotFoundError:
-    # Default configuration if no config file exists
-    config = {
-        "host": os.getenv("TRAEFIK_HOST", ""),
-        "http2https": os.getenv("TRAEFIK_HTTP2HTTPS", "True") == "True",
-        "lets_encrypt": os.getenv("TRAEFIK_LETS_ENCRYPT", "False") == "True",
-        "api_key": os.getenv("QDRANT_API_KEY", ""),
-        "tcp_port": int(os.getenv("TCP_PORT", 6333))
-    }
-
-# Dump the configuration to stdout
 json.dump(config, fp=sys.stdout)

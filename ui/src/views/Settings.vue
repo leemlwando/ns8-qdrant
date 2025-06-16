@@ -1,5 +1,5 @@
 <!--
-  Copyright (C) 2024 Nethesis S.r.l.
+  Copyright (C) 2023 Nethesis S.r.l.
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <template>
@@ -23,88 +23,15 @@
       <cv-column>
         <cv-tile light>
           <cv-form @submit.prevent="configureModule">
-            <NsTextInput
-              :label="$t('settings.qdrant_fqdn')"
-              placeholder="qdrant.example.org"
-              v-model.trim="host"
-              class="mg-bottom"
-              :invalid-message="$t(error.host)"
+            <!-- TODO remove test field and code configuration fields -->
+            <cv-text-input
+              :label="$t('settings.test_field')"
+              v-model="testField"
+              :placeholder="$t('settings.test_field')"
               :disabled="loading.getConfiguration || loading.configureModule"
-              ref="host"
-              tooltipAlignment="center"
-              tooltipDirection="right"
-            >
-              <template slot="tooltip">
-                <div>{{ $t("settings.host_tooltip") }}</div>
-              </template>
-            </NsTextInput>
-            <cv-toggle
-              value="letsEncrypt"
-              :label="$t('settings.lets_encrypt')"
-              v-model="isLetsEncryptEnabled"
-              :disabled="loading.getConfiguration || loading.configureModule"
-              class="mg-bottom"
-            >
-              <template slot="text-left">{{
-                $t("settings.disabled")
-              }}</template>
-              <template slot="text-right">{{
-                $t("settings.enabled")
-              }}</template>
-            </cv-toggle>
-            <cv-toggle
-              value="httpToHttps"
-              :label="$t('settings.http_to_https')"
-              v-model="isHttpToHttpsEnabled"
-              :disabled="loading.getConfiguration || loading.configureModule"
-              class="mg-bottom"
-            >
-              <template slot="text-left">{{
-                $t("settings.disabled")
-              }}</template>
-              <template slot="text-right">{{
-                $t("settings.enabled")
-              }}</template>
-            </cv-toggle>
-            <NsTextInput
-              :label="$t('settings.api_key')"
-              :placeholder="$t('settings.api_key_placeholder')"
-              v-model.trim="apiKey"
-              class="mg-bottom"
-              :invalid-message="$t(error.api_key)"
-              :disabled="loading.getConfiguration || loading.configureModule"
-              ref="api_key"
-              tooltipAlignment="center"
-              tooltipDirection="right"
-            >
-              <template slot="tooltip">
-                <div>{{ $t("settings.api_key_tooltip") }}</div>
-              </template>
-            </NsTextInput>
-            <!-- advanced options -->
-            <cv-accordion ref="accordion" class="maxwidth mg-bottom">
-              <cv-accordion-item :open="toggleAccordion[0]">
-                <template slot="title">{{ $t("settings.advanced") }}</template>
-                <template slot="content">
-                  <template v-if="tcpPort">
-                    <span class="mg-bottom">
-                      {{ $t("settings.tcp_port") }}
-                      <cv-tooltip
-                        alignment="start"
-                        direction="bottom"
-                        :tip="$t('settings.tcp_port_tooltip')"
-                        class="info mg-bottom"
-                      >
-                      </cv-tooltip>
-                    </span>
-                    <span>:</span>
-                    <span class="mg-bottom mg-left">
-                      {{ tcpPort }}
-                    </span>
-                  </template>
-                </template>
-              </cv-accordion-item>
-            </cv-accordion>
+              :invalid-message="error.testField"
+              ref="testField"
+            ></cv-text-input>
             <cv-row v-if="error.configureModule">
               <cv-column>
                 <NsInlineNotification
@@ -158,12 +85,7 @@ export default {
         page: "settings",
       },
       urlCheckInterval: null,
-      host: "",
-      isLetsEncryptEnabled: false,
-      isHttpToHttpsEnabled: true,
-      apiKey: "",
-      tcpPort: null,
-      toggleAccordion: [false],
+      testField: "", // TODO remove
       loading: {
         getConfiguration: false,
         configureModule: false,
@@ -171,16 +93,13 @@ export default {
       error: {
         getConfiguration: "",
         configureModule: "",
-        host: "",
-        api_key: "",
+        testField: "", // TODO remove
+        // TODO add all validation error fields
       },
     };
   },
   computed: {
     ...mapState(["instanceName", "core", "appName"]),
-  },
-  created() {
-    this.getConfiguration();
   },
   beforeRouteEnter(to, from, next) {
     next((vm) => {
@@ -191,6 +110,9 @@ export default {
   beforeRouteLeave(to, from, next) {
     clearInterval(this.urlCheckInterval);
     next();
+  },
+  created() {
+    this.getConfiguration();
   },
   methods: {
     async getConfiguration() {
@@ -236,27 +158,31 @@ export default {
       this.loading.getConfiguration = false;
     },
     getConfigurationCompleted(taskContext, taskResult) {
-      const config = taskResult.output;
-      this.host = config.host;
-      this.isLetsEncryptEnabled = config.lets_encrypt;
-      this.isHttpToHttpsEnabled = config.http2https;
-      this.apiKey = config.api_key;
-      this.tcpPort = config.tcp_port;
-
       this.loading.getConfiguration = false;
-      this.focusElement("host");
+      const config = taskResult.output;
+
+      // TODO set configuration fields
+      // ...
+
+      // TODO remove
+      console.log("config", config);
+
+      // TODO focus first configuration field
+      this.focusElement("testField");
     },
     validateConfigureModule() {
       this.clearErrors(this);
-
       let isValidationOk = true;
-      if (!this.host) {
-        this.error.host = "common.required";
+
+      // TODO remove testField and validate configuration fields
+      if (!this.testField) {
+        // test field cannot be empty
+        this.error.testField = this.$t("common.required");
 
         if (isValidationOk) {
-          this.focusElement("host");
+          this.focusElement("testField");
+          isValidationOk = false;
         }
-        isValidationOk = false;
       }
       return isValidationOk;
     },
@@ -265,13 +191,16 @@ export default {
       let focusAlreadySet = false;
 
       for (const validationError of validationErrors) {
-        const param = validationError.parameter;
-        // set i18n error message
-        this.error[param] = this.$t("settings." + validationError.error);
+        const field = validationError.field;
 
-        if (!focusAlreadySet) {
-          this.focusElement(param);
-          focusAlreadySet = true;
+        if (field !== "(root)") {
+          // set i18n error message
+          this.error[field] = this.$t("settings." + validationError.error);
+
+          if (!focusAlreadySet) {
+            this.focusElement(field);
+            focusAlreadySet = true;
+          }
         }
       }
     },
@@ -307,16 +236,13 @@ export default {
         this.createModuleTaskForApp(this.instanceName, {
           action: taskAction,
           data: {
-            host: this.host,
-            lets_encrypt: this.isLetsEncryptEnabled,
-            http2https: this.isHttpToHttpsEnabled,
-            api_key: this.apiKey,
+            // TODO configuration fields
           },
           extra: {
-            title: this.$t("settings.instance_configuration", {
+            title: this.$t("settings.configure_instance", {
               instance: this.instanceName,
             }),
-            description: this.$t("settings.configuring"),
+            description: this.$t("common.processing"),
             eventId,
           },
         })
@@ -347,11 +273,4 @@ export default {
 
 <style scoped lang="scss">
 @import "../styles/carbon-utils";
-.mg-bottom {
-  margin-bottom: $spacing-06;
-}
-
-.maxwidth {
-  max-width: 38rem;
-}
 </style>
