@@ -19,6 +19,7 @@ ExecStartPre=/bin/rm -f %t/qdrant.pid %t/qdrant.ctr-id
 ExecStartPre=-runagent discover-smarthost
 ExecStartPre=/bin/mkdir -p data snapshots config
 ExecStart=/usr/bin/podman run \
+    --user=999 \
     --detach \
     --conmon-pidfile=%t/qdrant.pid \
     --cidfile=%t/qdrant.ctr-id \
@@ -35,12 +36,7 @@ ExecStart=/usr/bin/podman run \
 ExecStop=/usr/bin/podman stop --ignore --cidfile %t/qdrant.ctr-id -t 10
 ExecStopPost=/usr/bin/podman rm --ignore -f --cidfile %t/qdrant.ctr-id
 PIDFile=%t/qdrant.pid
-Type=forking
-
-[Install]
-WantedBy=default.target
-PIDFile=%t/kickstart.pid
-Type=forking
+Type=notify
 
 [Install]
 WantedBy=default.target

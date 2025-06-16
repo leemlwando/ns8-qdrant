@@ -9,6 +9,7 @@ import json
 import sys
 import agent
 import os
+import subprocess
 
 # Parse input from stdin
 request = json.load(sys.stdin)
@@ -67,5 +68,10 @@ module_config = {
 
 with open('config/module_config.json', 'w') as f:
     json.dump(module_config, f, indent=2)
+
+# Ensure data directory exists and has correct permissions
+data_dir = "/var/lib/nethserver/qdrant"
+os.makedirs(data_dir, exist_ok=True)
+subprocess.run(['chown', '-R', '999:999', data_dir], check=True)
 
 print("Qdrant module created successfully")
