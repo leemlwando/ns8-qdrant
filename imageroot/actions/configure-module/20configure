@@ -13,64 +13,49 @@ import os
 
 request = json.load(sys.stdin)
 
-# Extract configuration parameters for Qdrant
-http_port = request.get('http_port', 6333)
-grpc_port = request.get('grpc_port', 6334)
+# Get the dynamically allocated host ports
+host_http_port = os.environ['TCP_PORT']
+host_grpc_port = os.environ['TCP_PORT_2']
+
+# Container ports are fixed
+container_http_port = 6333
+container_grpc_port = 6334
+
+# Extract other configuration parameters
 api_key = request.get('api_key', '')
 log_level = request.get('log_level', 'INFO')
-storage_path = request.get('storage_path', '')
+storage_path = request.get('storage_path', './data')
 
-# Map the configured ports to the allocated system ports
-# NS8 allocates actual system ports via TCP_PORT and TCP_PORT_2
-# We store the logical ports for API access
-agent.set_env('HTTP_PORT', str(http_port))
-agent.set_env('GRPC_PORT', str(grpc_port))
-agent.set_env('QDRANT_IMAGE', 'qdrant/qdrant:latest')
+# Set environment variables
 agent.set_env('LOG_LEVEL', log_level)
-
-# Set default storage path if not provided
-if not storage_path:
-    storage_path = './data'
 agent.set_env('STORAGE_PATH', storage_path)
-
-# Set API key if provided
 if api_key:
     agent.set_env('API_KEY', api_key)
 else:
     agent.unset_env('API_KEY')
 
-# Create Qdrant configuration file as YAML (without importing yaml library)
+# Create Qdrant configuration file using container ports
 qdrant_config_yaml = f"""log_level: {log_level}
 storage:
   storage_path: {storage_path}
   snapshots_path: ./snapshots
-  wal_capacity_mb: 32
-  wal_segments_ahead: 0
 service:
-  http_port: 6333
-  grpc_port: 6334
+  http_port: {container_http_port}
+  grpc_port: {container_grpc_port}
   enable_cors: true
-  max_request_size_mb: 32
-  max_workers: 0
-  host: 0.0.0.0
-cluster:
-  enabled: false
-telemetry:
-  disabled: true"""
-
-# Add API key to config if provided
+"""
 if api_key:
-    qdrant_config_yaml += f"\nservice:\n  api_key: \"{api_key}\""
+    qdrant_config_yaml += f"\n  api_key: \"{api_key}\""
 
 # Write configuration file
 os.makedirs('config', exist_ok=True)
 with open('config/production.yaml', 'w') as f:
     f.write(qdrant_config_yaml)
 
-# Store module configuration for get-configuration action
+# Store module configuration for get-configuration action, using host ports
 module_config = {
-    'http_port': http_port,
-    'grpc_port': grpc_port,
+    'http_port': host_http_port,
+    'grpc_port': host_grpc_port,
     'api_key': api_key,
     'log_level': log_level,
     'storage_path': storage_path
@@ -79,20 +64,15 @@ module_config = {
 with open('config/module_config.json', 'w') as f:
     json.dump(module_config, f, indent=2)
 
-# Configure Traefik to route "/qdrant" path requests to the qdrant service
-# Use the allocated TCP_PORT (which maps to container port 6333)
-tcp_port = agent.get_env('TCP_PORT')
+# Configure Traefik to use the allocated host HTTP port
 response = agent.tasks.run(
     agent_id=agent.resolve_agent_id('traefik@node'),
     action='set-route',
     data={
         'instance': os.environ['MODULE_ID'],
-        'url': f'http://127.0.0.1:{tcp_port}',
-        'http2https': False,
-        'lets_encrypt': False,
+        'url': f'http://127.0.0.1:{host_http_port}',
         'path': '/qdrant',
     },
 )
 
-# Check if traefik configuration has been successful
 agent.assert_exp(response['exit_code'] == 0)

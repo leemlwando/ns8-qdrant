@@ -13,9 +13,17 @@ import os
 # Parse input from stdin
 request = json.load(sys.stdin)
 
-# Set default environment variables for Qdrant
-agent.set_env('HTTP_PORT', '6333')
-agent.set_env('GRPC_PORT', '6334')
+# Get allocated ports from environment. These are the HOST ports.
+host_http_port = os.environ['TCP_PORT']
+host_grpc_port = os.environ['TCP_PORT_2']
+
+# The ports inside the container are fixed.
+container_http_port = 6333
+container_grpc_port = 6334
+
+# Set environment variables for other scripts to use the HOST ports
+agent.set_env('HTTP_PORT', host_http_port)
+agent.set_env('GRPC_PORT', host_grpc_port)
 agent.set_env('QDRANT_IMAGE', 'qdrant/qdrant:latest')
 agent.set_env('LOG_LEVEL', 'INFO')
 agent.set_env('STORAGE_PATH', './data')
@@ -25,16 +33,16 @@ os.makedirs('config', exist_ok=True)
 os.makedirs('data', exist_ok=True)
 os.makedirs('snapshots', exist_ok=True)
 
-# Create default Qdrant configuration as YAML string
-default_config_yaml = """log_level: INFO
+# Create default Qdrant configuration as YAML string, using the CONTAINER ports
+default_config_yaml = f"""log_level: INFO
 storage:
   storage_path: ./data
   snapshots_path: ./snapshots
   wal_capacity_mb: 32
   wal_segments_ahead: 0
 service:
-  http_port: 6333
-  grpc_port: 6334
+  http_port: {container_http_port}
+  grpc_port: {container_grpc_port}
   enable_cors: true
   max_request_size_mb: 32
   max_workers: 0
@@ -48,10 +56,10 @@ telemetry:
 with open('config/production.yaml', 'w') as f:
     f.write(default_config_yaml)
 
-# Store module configuration for get-configuration action
+# Store module configuration for get-configuration action, using HOST ports
 module_config = {
-    'http_port': 6333,
-    'grpc_port': 6334,
+    'http_port': host_http_port,
+    'grpc_port': host_grpc_port,
     'api_key': '',
     'log_level': 'INFO',
     'storage_path': './data'
