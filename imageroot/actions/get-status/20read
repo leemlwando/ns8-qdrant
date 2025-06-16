@@ -36,15 +36,24 @@ except subprocess.SubprocessError:
 http_port = 6333
 grpc_port = 6334
 
-config_file = 'config/module_config.json'
-if os.path.exists(config_file):
-    try:
-        with open(config_file, 'r') as f:
-            config = json.load(f)
-            http_port = config.get('http_port', 6333)
-            grpc_port = config.get('grpc_port', 6334)
-    except (json.JSONDecodeError, IOError):
-        pass
+# Try to get allocated ports from environment
+try:
+    import agent
+    tcp_port = agent.get_env('TCP_PORT', '6333')
+    tcp_port_2 = agent.get_env('TCP_PORT_2', '6334')
+    http_port = int(tcp_port)
+    grpc_port = int(tcp_port_2)
+except:
+    # Fallback to reading from config file
+    config_file = 'config/module_config.json'
+    if os.path.exists(config_file):
+        try:
+            with open(config_file, 'r') as f:
+                config = json.load(f)
+                http_port = config.get('http_port', 6333)
+                grpc_port = config.get('grpc_port', 6334)
+        except (json.JSONDecodeError, IOError):
+            pass
 
 # Output status information
 status_info = {

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#
+# Copyright (C) 2025 Lee M. Lwando
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+set -e
+
+# Allocate TCP ports for HTTP and gRPC
+exec agent alloc-ports TCP_PORT TCP_PORT_2
