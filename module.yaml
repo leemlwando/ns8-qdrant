@@ -1,0 +1,6 @@
+id: qdrant
+name: Qdrant Vector DB
+version: 1.0.0
+description: High-performance vector database for similarity search
+maintainer: Your Name <your@email.com>
+license: MIT

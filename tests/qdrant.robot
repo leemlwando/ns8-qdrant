@@ -1,5 +1,6 @@
 *** Settings ***
 Library    SSHLibrary
+Library           Requests
 
 *** Test Cases ***
 Check if qdrant is installed correctly
@@ -48,3 +49,19 @@ Check if kickstart is removed correctly
     ${rc} =    Execute Command    remove-module --no-preserve ${module_id}
     ...    return_rc=True  return_stdout=False
     Should Be Equal As Integers    ${rc}  0
+
+Install Qdrant Module
+    [Tags]    install
+    # Add installation steps here
+    Log    Qdrant module installed
+
+Check Qdrant API
+    [Tags]    api
+    Create Session    qdrant    http://localhost:6333
+    ${resp}=    Get Request    qdrant    /
+    Should Be Equal As Integers    ${resp.status_code}    200
+
+Remove Qdrant Module
+    [Tags]    remove
+    # Add removal steps here
+    Log    Qdrant module removed

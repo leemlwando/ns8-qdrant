@@ -1,0 +1,15 @@
+[Unit]
+Description=Qdrant Vector DB
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/podman run --rm --name qdrant \
+  -v /var/lib/nethserver/qdrant:/qdrant_data:Z \
+  -p 6333:6333 \
+  --user 999:999 \
+  qdrant/qdrant:latest
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
