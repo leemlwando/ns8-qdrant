@@ -5,8 +5,6 @@
     "description": "Configure Qdrant vector database",
     "examples": [
         {
-            "http_port": 6333,
-            "grpc_port": 6334,
             "api_key": "your-secret-api-key",
             "log_level": "INFO",
             "storage_path": ""
@@ -14,20 +12,6 @@
     ],
     "type": "object",
     "properties": {
-        "http_port": {
-            "type": "integer",
-            "minimum": 1024,
-            "maximum": 65535,
-            "default": 6333,
-            "description": "HTTP API port for Qdrant"
-        },
-        "grpc_port": {
-            "type": "integer", 
-            "minimum": 1024,
-            "maximum": 65535,
-            "default": 6334,
-            "description": "gRPC API port for Qdrant"
-        },
         "api_key": {
             "type": "string",
             "description": "API key for securing Qdrant access",
