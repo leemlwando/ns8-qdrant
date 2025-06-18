@@ -7,28 +7,16 @@
 
 import json
 import sys
-import agent
 import os
 
-# Read configuration from stored state
+# Read configuration from environment variables (NS8 best practice)
 config = {
-    "ApiKey": "",
-    "EnableWebUI": True,
-    "HttpsEnabled": True,
-    "CustomPath": "/qdrant",
-    "CustomHost": "",
-    "LetsEncrypt": False
+    "ApiKey": os.getenv("QDRANT_API_KEY", ""),
+    "EnableWebUI": os.getenv("QDRANT_ENABLE_WEB_UI", "true").lower() in ('true', '1', 't'),
+    "HttpsEnabled": os.getenv("QDRANT_HTTPS_ENABLED", "true").lower() in ('true', '1', 't'),
+    "CustomPath": os.getenv("QDRANT_CUSTOM_PATH", "/qdrant"),
+    "CustomHost": os.getenv("QDRANT_CUSTOM_HOST", ""),
+    "LetsEncrypt": os.getenv("QDRANT_LETS_ENCRYPT", "false").lower() in ('true', '1', 't')
 }
-
-# Try to read from config file
-try:
-    state_dir = os.environ.get("STATE_DIR", os.getcwd())
-    config_file_path = os.path.join(state_dir, "config.json")
-    with open(config_file_path, "r") as f:
-        stored_config = json.load(f)
-        config.update(stored_config)
-except FileNotFoundError:
-    # Use defaults if no config file exists
-    pass
 
 json.dump(config, fp=sys.stdout)

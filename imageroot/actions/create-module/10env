@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+
+#
+# Copyright (C) 2023 Nethesis S.r.l.
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+
+import agent
+
+# Set default environment variables for new module instances
+agent.set_env('QDRANT_API_KEY', '')
+agent.set_env('QDRANT_ENABLE_WEB_UI', 'true')
+agent.set_env('QDRANT_HTTPS_ENABLED', 'true')
+agent.set_env('QDRANT_CUSTOM_PATH', '/qdrant')
+agent.set_env('QDRANT_CUSTOM_HOST', '')
+agent.set_env('QDRANT_LETS_ENCRYPT', 'false')

@@ -19,34 +19,26 @@ custom_path = request.get("CustomPath", "/qdrant")
 custom_host = request.get("CustomHost", "")
 lets_encrypt = request.get("LetsEncrypt", False)
 
-# Always create the qdrant.env file
-# Use STATE_DIR if available, otherwise use current working directory
-state_dir = os.environ.get("STATE_DIR", os.getcwd())
-env_file_path = os.path.join(state_dir, "qdrant.env")
-with open(env_file_path, "w") as f:
-    if api_key:
-        f.write(f"QDRANT__SERVICE__API_KEY={api_key}\n")
-    else:
-        f.write("# No API key configured\n")
-    
-    # Configure web UI
-    if enable_web_ui:
-        f.write("QDRANT__WEB_UI__ENABLED=true\n")
-    else:
-        f.write("QDRANT__WEB_UI__ENABLED=false\n")
+# Set environment variables for configuration (NS8 best practice)
+agent.set_env("QDRANT_API_KEY", api_key)
+agent.set_env("QDRANT_ENABLE_WEB_UI", str(enable_web_ui).lower())
+agent.set_env("QDRANT_HTTPS_ENABLED", str(https_enabled).lower())
+agent.set_env("QDRANT_CUSTOM_PATH", custom_path)
+agent.set_env("QDRANT_CUSTOM_HOST", custom_host)
+agent.set_env("QDRANT_LETS_ENCRYPT", str(lets_encrypt).lower())
 
-# Save configuration for later retrieval
-config_file_path = os.path.join(state_dir, "config.json")
-config = {
-    "ApiKey": api_key,
-    "EnableWebUI": enable_web_ui,
-    "HttpsEnabled": https_enabled,
-    "CustomPath": custom_path,
-    "CustomHost": custom_host,
-    "LetsEncrypt": lets_encrypt
-}
-with open(config_file_path, "w") as f:
-    json.dump(config, f)
+# Create the qdrant.env file using NS8 agent library
+qdrant_env = {}
+if api_key:
+    qdrant_env["QDRANT__SERVICE__API_KEY"] = api_key
+
+# Configure web UI
+if enable_web_ui:
+    qdrant_env["QDRANT__WEB_UI__ENABLED"] = "true"
+else:
+    qdrant_env["QDRANT__WEB_UI__ENABLED"] = "false"
+
+agent.write_envfile("qdrant.env", qdrant_env)
 
 # Configure Traefik to route requests to the qdrant service
 traefik_data = {
@@ -61,6 +53,7 @@ if custom_host:
     traefik_data['host'] = custom_host
 else:
     traefik_data['path'] = custom_path
+
 response = agent.tasks.run(
     agent_id=agent.resolve_agent_id('traefik@node'),
     action='set-route',
