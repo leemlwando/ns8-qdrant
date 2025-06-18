@@ -92,8 +92,7 @@
             <div class="bx--form__helper-text">
               {{ $t('settings.https_enabled_description') }}
             </div>
-            
-            <cv-accordion v-if="!loading.getConfiguration && accessUrls.database">
+              <cv-accordion v-if="!loading.getConfiguration && accessUrls.database" class="access-accordion">
               <cv-accordion-item>
                 <template slot="title">{{ $t('settings.access_info') }}</template>
                 <template slot="content">
@@ -403,6 +402,10 @@ export default {
 
 <style scoped lang="scss">
 @import "../styles/carbon-utils";
+
+.access-accordion {
+  margin-bottom: 2rem;
+}
 
 .access-info {
   margin-top: 1rem;
