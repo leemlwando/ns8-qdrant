@@ -12,6 +12,15 @@ import agent.tasks
 import os
 
 request = json.load(sys.stdin)
+api_key = request.get("ApiKey", "")
+
+# Always create the qdrant.env file, even if empty
+env_file_path = os.path.join(os.environ["STATE_DIR"], "qdrant.env")
+with open(env_file_path, "w") as f:
+    if api_key:
+        f.write(f"QDRANT__SERVICE__API_KEY={api_key}\n")
+    else:
+        f.write("# No API key configured\n")
 
 # Configure Traefik to route "/qdrant" path requests to the qdrant service
 response = agent.tasks.run(

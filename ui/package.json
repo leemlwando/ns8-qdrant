@@ -1,6 +1,11 @@
 {
-  "name": "ui",
+  "name": "ns8-qdrant",
   "version": "0.1.0",
+  "author": "leemlwando@gmail.com, Lee M. Lwando",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:leemlwando/ns8-qdrant.git"
+  },
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",

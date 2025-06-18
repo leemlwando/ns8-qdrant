@@ -1,19 +1,19 @@
 {
-  "name": "kickstart",
+  "name": "ns8-qdrant",
   "description": {
-    "en": "My kickstart module"
+    "en": "Qdrant vector database"
   },
-  "categories": [],
+  "categories": ["database"],
   "authors": [
     {
-      "name": "Name Surname",
-      "email": "author@yourmail.org"
+      "name": "Lee M. Lwando",
+      "email": "leemlwando@gmail.com"
     }
   ],
   "docs": {
-    "documentation_url": "https://docs.kickstart.com/",
-    "bug_url": "https://github.com/NethServer/dev",
-    "code_url": "https://github.com/author/ns8-kickstart"
+    "documentation_url": "https://github.com/leemlwando/ns8-qdrant",
+    "bug_url": "https://github.com/leemlwando/ns8-qdrant/issues",
+    "code_url": "https://github.com/leemlwando/ns8-qdrant"
   },
-  "source": "ghcr.io/nethserver/kickstart"
+  "source": "ghcr.io/leemlwando/ns8-qdrant"
 }

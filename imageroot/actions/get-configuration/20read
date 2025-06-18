@@ -7,8 +7,17 @@
 
 import json
 import sys
+import os
 import agent
 
 config = {}
+
+try:
+    with open(os.path.join(os.environ["STATE_DIR"], "qdrant.env"), "r") as f:
+        for line in f:
+            if line.startswith("QDRANT__SERVICE__API_KEY="):
+                config["ApiKey"] = line.strip().split("=", 1)[1]
+except FileNotFoundError:
+    pass
 
 json.dump(config, fp=sys.stdout)

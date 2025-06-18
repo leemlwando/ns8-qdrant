@@ -18,13 +18,14 @@
         "mount": "Mount",
         "no_services": "No services",
         "no_images": "No images",
-        "no_volumes": "No volumes"
-    },
-    "settings": {
+        "no_volumes": "No volumes",
+        "qdrant_service_status": "Qdrant Service Status"
+    },    "settings": {
         "title": "Settings",
         "configure_instance": "Configure {instance}",
         "save": "Save",
-        "test_field": "Test field"
+        "test_field": "Test field",
+        "api_key": "API Key"
     },
     "about": {
         "title": "About"
