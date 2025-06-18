@@ -56,12 +56,12 @@ export default {
   ],
   pageTitle() {
     return this.$t("status.title") + " - " + this.appName;
-  },
-  data() {
+  },  data() {
     return {
       q: {
         page: "status",
       },
+      urlCheckInterval: null,
       qdrantServiceStatus: "",
       loading: {
         getStatus: false,
@@ -70,8 +70,9 @@ export default {
         getStatus: "",
       },
     };
-  },  computed: {
-    ...mapState(["instanceName", "appName"]),
+  },
+  computed: {
+    ...mapState(["instanceName", "instanceLabel", "core", "appName"]),
     statusDisplayText() {
       if (this.qdrantServiceStatus === "active") return "Running";
       if (this.qdrantServiceStatus === "inactive") return "Stopped";
@@ -89,45 +90,69 @@ export default {
       return "";
     }
   },
-  mounted() {
-    this.getStatus();
+  beforeRouteEnter(to, from, next) {
+    next((vm) => {
+      vm.watchQueryData(vm);
+      vm.urlCheckInterval = vm.initUrlBindingForApp(vm, vm.q.page);
+    });
   },
-  methods: {    async getStatus() {
+  beforeRouteLeave(to, from, next) {
+    clearInterval(this.urlCheckInterval);
+    next();
+  },
+  created() {
+    this.getStatus();
+  },  methods: {    async getStatus() {
       this.loading.getStatus = true;
       this.error.getStatus = "";
-      
-      try {
-        const [err, data] = await to(
-          this.api.get(
-            `/cluster/v1/agents/${this.instanceName}/get-status`
-          )
-        );
-        
-        if (err) {
-          console.error("Status API error:", err);
-          this.error.getStatus = this.formatError(err);
-          this.qdrantServiceStatus = "Error fetching status";
-          this.loading.getStatus = false;
-          return;
-        }
+      const taskAction = "get-status";
+      const eventId = this.getUuid();
 
-        console.log("Status response:", data);
-        
-        // Handle the response structure
-        if (data && data.data && data.data.result) {
-          this.qdrantServiceStatus = data.data.result.qdrant_service_status || "unknown";
-        } else {
-          console.warn("Unexpected response structure:", data);
-          this.qdrantServiceStatus = "Invalid response";
-        }
-        
-      } catch (error) {
-        console.error("Status fetch error:", error);
-        this.error.getStatus = "Failed to fetch status";
-        this.qdrantServiceStatus = "Error";
+      // register to task error
+      this.core.$root.$once(
+        `${taskAction}-aborted-${eventId}`,
+        this.getStatusAborted
+      );
+
+      // register to task completion
+      this.core.$root.$once(
+        `${taskAction}-completed-${eventId}`,
+        this.getStatusCompleted
+      );
+
+      const res = await to(
+        this.createModuleTaskForApp(this.instanceName, {
+          action: taskAction,
+          extra: {
+            title: this.$t("action." + taskAction),
+            isNotificationHidden: true,
+            eventId,
+          },
+        })
+      );
+      const err = res[0];
+
+      if (err) {
+        console.error(`error creating task ${taskAction}`, err);
+        this.error.getStatus = this.getErrorMessage(err);
+        this.loading.getStatus = false;
+        return;
       }
-      
+    },
+    getStatusAborted(taskResult, taskContext) {
+      console.error(`${taskContext.action} aborted`, taskResult);
+      this.error.getStatus = this.$t("error.generic_error");
       this.loading.getStatus = false;
+    },
+    getStatusCompleted(taskContext, taskResult) {
+      this.loading.getStatus = false;
+      
+      if (taskResult && taskResult.output) {
+        this.qdrantServiceStatus = taskResult.output.qdrant_service_status || "unknown";
+      } else {
+        console.warn("Unexpected response structure:", taskResult);
+        this.qdrantServiceStatus = "Invalid response";
+      }
     },
   },
 };

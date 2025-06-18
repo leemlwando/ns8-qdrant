@@ -155,9 +155,8 @@ export default {
         customPath: "",
       },
     };
-  },
-  computed: {
-    ...mapState(["instanceName", "appName"]),
+  },computed: {
+    ...mapState(["instanceName", "core", "appName"]),
     accessUrls() {
       if (!this.customPath) return {};
       
@@ -172,65 +171,174 @@ export default {
       };
     }
   },
-  mounted() {
+  beforeRouteEnter(to, from, next) {
+    next((vm) => {
+      vm.watchQueryData(vm);
+      vm.urlCheckInterval = vm.initUrlBindingForApp(vm, vm.q.page);
+    });
+  },
+  beforeRouteLeave(to, from, next) {
+    clearInterval(this.urlCheckInterval);
+    next();
+  },
+  created() {
     this.getConfiguration();
   },
-  methods: {
-    async getConfiguration() {
+  methods: {    async getConfiguration() {
       this.loading.getConfiguration = true;
       this.error.getConfiguration = "";
-      const [err, data] = await to(
-        this.api.get(
-          `/cluster/v1/agents/${this.instanceName}/get-configuration`
-        )
+      const taskAction = "get-configuration";
+      const eventId = this.getUuid();
+
+      // register to task error
+      this.core.$root.$once(
+        `${taskAction}-aborted-${eventId}`,
+        this.getConfigurationAborted
       );
+
+      // register to task completion
+      this.core.$root.$once(
+        `${taskAction}-completed-${eventId}`,
+        this.getConfigurationCompleted
+      );
+
+      const res = await to(
+        this.createModuleTaskForApp(this.instanceName, {
+          action: taskAction,
+          extra: {
+            title: this.$t("action." + taskAction),
+            isNotificationHidden: true,
+            eventId,
+          },
+        })
+      );
+      const err = res[0];
+
       if (err) {
-        console.error(err);
-        this.error.getConfiguration = this.formatError(err);
+        console.error(`error creating task ${taskAction}`, err);
+        this.error.getConfiguration = this.getErrorMessage(err);
         this.loading.getConfiguration = false;
         return;
-      }      this.apiKey = data.data.result.ApiKey || "";
-      this.enableWebUI = data.data.result.EnableWebUI !== undefined ? data.data.result.EnableWebUI : true;
-      this.httpsEnabled = data.data.result.HttpsEnabled !== undefined ? data.data.result.HttpsEnabled : true;
-      this.customPath = data.data.result.CustomPath || "/qdrant";
+      }
+    },
+    getConfigurationAborted(taskResult, taskContext) {
+      console.error(`${taskContext.action} aborted`, taskResult);
+      this.error.getConfiguration = this.$t("error.generic_error");
       this.loading.getConfiguration = false;
+    },
+    getConfigurationCompleted(taskContext, taskResult) {
+      this.loading.getConfiguration = false;
+      const config = taskResult.output;
+
+      this.apiKey = config.ApiKey || "";
+      this.enableWebUI = config.EnableWebUI !== undefined ? config.EnableWebUI : true;
+      this.httpsEnabled = config.HttpsEnabled !== undefined ? config.HttpsEnabled : true;
+      this.customPath = config.CustomPath || "/qdrant";
+
+      // focus first configuration field
+      this.focusElement("apiKey");
     },    async configureModule() {
+      const isValidationOk = this.validateConfigureModule();
+      if (!isValidationOk) {
+        return;
+      }
+
       this.loading.configureModule = true;
       this.error.configureModule = "";
       this.error.apiKey = "";
       this.error.customPath = "";
 
-      // Validate custom path
-      if (!this.customPath || !this.customPath.startsWith("/")) {
-        this.error.customPath = "Path must start with /";
-        this.loading.configureModule = false;
-        return;
-      }
+      const taskAction = "configure-module";
+      const eventId = this.getUuid();
 
-      const [err, data] = await to(
-        this.api.post(
-          `/cluster/v1/agents/${this.instanceName}/configure-module`,
-          {
+      // register to task error
+      this.core.$root.$once(
+        `${taskAction}-aborted-${eventId}`,
+        this.configureModuleAborted
+      );
+
+      // register to task validation
+      this.core.$root.$once(
+        `${taskAction}-validation-failed-${eventId}`,
+        this.configureModuleValidationFailed
+      );
+
+      // register to task completion
+      this.core.$root.$once(
+        `${taskAction}-completed-${eventId}`,
+        this.configureModuleCompleted
+      );
+
+      const res = await to(
+        this.createModuleTaskForApp(this.instanceName, {
+          action: taskAction,
+          data: {
             ApiKey: this.apiKey,
             EnableWebUI: this.enableWebUI,
             HttpsEnabled: this.httpsEnabled,
             CustomPath: this.customPath,
-          }
-        )
+          },
+          extra: {
+            title: this.$t("settings.configure_instance", {
+              instance: this.instanceName,
+            }),
+            description: this.$t("common.processing"),
+            eventId,
+          },
+        })
       );
+      const err = res[0];
 
       if (err) {
-        console.error(err);
-        this.error.configureModule = this.formatError(err);
+        console.error(`error creating task ${taskAction}`, err);
+        this.error.configureModule = this.getErrorMessage(err);
         this.loading.configureModule = false;
         return;
       }
+    },
+    configureModuleAborted(taskResult, taskContext) {
+      console.error(`${taskContext.action} aborted`, taskResult);
+      this.error.configureModule = this.$t("error.generic_error");
+      this.loading.configureModule = false;
+    },    configureModuleValidationFailed(validationErrors) {
+      this.loading.configureModule = false;
+      let focusAlreadySet = false;
 
-      const taskUrl = data.headers["location"];
-      this.waitForTask(taskUrl, this.$t("action.configure-module")).then(() => {
-        this.loading.configureModule = false;
-        this.getConfiguration();
-      });
+      for (const validationError of validationErrors) {
+        const field = validationError.field;
+
+        if (field !== "(root)") {
+          // set i18n error message
+          this.error[field] = this.$t("settings." + validationError.error);
+
+          if (!focusAlreadySet) {
+            this.focusElement(field);
+            focusAlreadySet = true;
+          }
+        }
+      }
+    },
+    validateConfigureModule() {
+      this.clearErrors(this);
+      let isValidationOk = true;
+
+      // Validate custom path
+      if (!this.customPath || !this.customPath.startsWith("/")) {
+        this.error.customPath = this.$t("common.required");
+
+        if (isValidationOk) {
+          this.focusElement("customPath");
+          isValidationOk = false;
+        }
+      }
+
+      return isValidationOk;
+    },
+    configureModuleCompleted() {
+      this.loading.configureModule = false;
+
+      // reload configuration
+      this.getConfiguration();
     },
   },
 };
