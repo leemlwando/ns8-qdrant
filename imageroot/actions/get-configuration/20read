@@ -22,7 +22,8 @@ config = {
 
 # Try to read from config file
 try:
-    config_file_path = os.path.join(os.environ.get("STATE_DIR", "."), "config.json")
+    state_dir = os.environ.get("STATE_DIR", os.getcwd())
+    config_file_path = os.path.join(state_dir, "config.json")
     with open(config_file_path, "r") as f:
         stored_config = json.load(f)
         config.update(stored_config)

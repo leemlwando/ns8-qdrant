@@ -20,7 +20,9 @@ custom_host = request.get("CustomHost", "")
 lets_encrypt = request.get("LetsEncrypt", False)
 
 # Always create the qdrant.env file
-env_file_path = os.path.join(os.environ["STATE_DIR"], "qdrant.env")
+# Use STATE_DIR if available, otherwise use current working directory
+state_dir = os.environ.get("STATE_DIR", os.getcwd())
+env_file_path = os.path.join(state_dir, "qdrant.env")
 with open(env_file_path, "w") as f:
     if api_key:
         f.write(f"QDRANT__SERVICE__API_KEY={api_key}\n")
@@ -34,7 +36,7 @@ with open(env_file_path, "w") as f:
         f.write("QDRANT__WEB_UI__ENABLED=false\n")
 
 # Save configuration for later retrieval
-config_file_path = os.path.join(os.environ["STATE_DIR"], "config.json")
+config_file_path = os.path.join(state_dir, "config.json")
 config = {
     "ApiKey": api_key,
     "EnableWebUI": enable_web_ui,
