@@ -15,7 +15,9 @@ config = {
     "ApiKey": "",
     "EnableWebUI": True,
     "HttpsEnabled": True,
-    "CustomPath": "/qdrant"
+    "CustomPath": "/qdrant",
+    "CustomHost": "",
+    "LetsEncrypt": False
 }
 
 # Try to read from config file

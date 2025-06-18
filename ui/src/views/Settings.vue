@@ -21,8 +21,7 @@
     </cv-row>
     <cv-row>
       <cv-column>        <cv-tile light>
-          <cv-form @submit.prevent="configureModule">
-            <cv-text-input
+          <cv-form @submit.prevent="configureModule">            <cv-text-input
               :label="$t('settings.api_key')"
               v-model="apiKey"
               :placeholder="$t('settings.api_key')"
@@ -31,14 +30,44 @@
               ref="apiKey"
             ></cv-text-input>
             
-            <cv-text-input
-              :label="$t('settings.custom_path')"
-              v-model="customPath"
-              :placeholder="'/qdrant'"
-              :disabled="loading.getConfiguration || loading.configureModule"
-              :invalid-message="error.customPath"
-              :helper-text="$t('settings.custom_path_description')"
-            ></cv-text-input>
+            <!-- Domain Configuration Section -->
+            <cv-accordion>
+              <cv-accordion-item>
+                <template slot="title">{{ $t('settings.access_configuration') }}</template>
+                <template slot="content">
+                  <cv-text-input
+                    :label="$t('settings.custom_host')"
+                    v-model="customHost"
+                    :placeholder="'qdrant.mydomain.co.zm'"
+                    :disabled="loading.getConfiguration || loading.configureModule"
+                    :invalid-message="error.customHost"
+                    :helper-text="$t('settings.custom_host_description')"
+                  ></cv-text-input>
+                  
+                  <cv-text-input
+                    :label="$t('settings.custom_path')"
+                    v-model="customPath"
+                    :placeholder="'/qdrant'"
+                    :disabled="loading.getConfiguration || loading.configureModule || customHost"
+                    :invalid-message="error.customPath"
+                    :helper-text="customHost ? $t('settings.custom_path_disabled_for_domain') : $t('settings.custom_path_description')"
+                  ></cv-text-input>
+                  
+                  <cv-toggle
+                    v-if="customHost"
+                    :label="$t('settings.lets_encrypt')"
+                    v-model="letsEncrypt"
+                    :disabled="loading.getConfiguration || loading.configureModule"
+                  >
+                    <template slot="text-left">Disabled</template>
+                    <template slot="text-right">Enabled</template>
+                  </cv-toggle>
+                  <div v-if="customHost" class="bx--form__helper-text">
+                    {{ $t('settings.lets_encrypt_description') }}
+                  </div>
+                </template>
+              </cv-accordion-item>
+            </cv-accordion>
             
             <cv-toggle
               :label="$t('settings.enable_web_ui')"
@@ -139,36 +168,46 @@ export default {
       q: {
         page: "settings",
       },
-      urlCheckInterval: null,
-      apiKey: "",
+      urlCheckInterval: null,      apiKey: "",
       enableWebUI: true,
       httpsEnabled: true,
       customPath: "/qdrant",
+      customHost: "",
+      letsEncrypt: false,
       loading: {
         getConfiguration: false,
         configureModule: false,
-      },
-      error: {
+      },      error: {
         getConfiguration: "",
         configureModule: "",
         apiKey: "",
         customPath: "",
+        customHost: "",
       },
     };
   },computed: {
-    ...mapState(["instanceName", "core", "appName"]),
-    accessUrls() {
-      if (!this.customPath) return {};
+    ...mapState(["instanceName", "core", "appName"]),    accessUrls() {
+      const protocol = this.httpsEnabled || this.letsEncrypt ? "https" : "http";
       
-      const protocol = this.httpsEnabled ? "https" : "http";
-      const hostname = window.location.hostname;
-      const port = window.location.port ? `:${window.location.port}` : "";
-      const basePath = this.customPath.startsWith("/") ? this.customPath : `/${this.customPath}`;
+      if (this.customHost) {
+        // Domain-based access
+        return {
+          database: `${protocol}://${this.customHost}`,
+          console: this.enableWebUI ? `${protocol}://${this.customHost}/dashboard` : null
+        };
+      } else if (this.customPath) {
+        // Path-based access
+        const hostname = window.location.hostname;
+        const port = window.location.port ? `:${window.location.port}` : "";
+        const basePath = this.customPath.startsWith("/") ? this.customPath : `/${this.customPath}`;
+        
+        return {
+          database: `${protocol}://${hostname}${port}${basePath}`,
+          console: this.enableWebUI ? `${protocol}://${hostname}${port}${basePath}/dashboard` : null
+        };
+      }
       
-      return {
-        database: `${protocol}://${hostname}${port}${basePath}`,
-        console: this.enableWebUI ? `${protocol}://${hostname}${port}${basePath}/dashboard` : null
-      };
+      return {};
     }
   },
   beforeRouteEnter(to, from, next) {
@@ -228,16 +267,16 @@ export default {
     },
     getConfigurationCompleted(taskContext, taskResult) {
       this.loading.getConfiguration = false;
-      const config = taskResult.output;
-
-      this.apiKey = config.ApiKey || "";
+      const config = taskResult.output;      this.apiKey = config.ApiKey || "";
       this.enableWebUI = config.EnableWebUI !== undefined ? config.EnableWebUI : true;
       this.httpsEnabled = config.HttpsEnabled !== undefined ? config.HttpsEnabled : true;
       this.customPath = config.CustomPath || "/qdrant";
+      this.customHost = config.CustomHost || "";
+      this.letsEncrypt = config.LetsEncrypt !== undefined ? config.LetsEncrypt : false;
 
       // focus first configuration field
       this.focusElement("apiKey");
-    },    async configureModule() {
+    },async configureModule() {
       const isValidationOk = this.validateConfigureModule();
       if (!isValidationOk) {
         return;
@@ -271,12 +310,13 @@ export default {
 
       const res = await to(
         this.createModuleTaskForApp(this.instanceName, {
-          action: taskAction,
-          data: {
+          action: taskAction,          data: {
             ApiKey: this.apiKey,
             EnableWebUI: this.enableWebUI,
             HttpsEnabled: this.httpsEnabled,
             CustomPath: this.customPath,
+            CustomHost: this.customHost,
+            LetsEncrypt: this.letsEncrypt,
           },
           extra: {
             title: this.$t("settings.configure_instance", {
@@ -317,8 +357,7 @@ export default {
           }
         }
       }
-    },
-    validateConfigureModule() {
+    },    validateConfigureModule() {
       this.clearErrors(this);
       let isValidationOk = true;
 
@@ -328,12 +367,25 @@ export default {
         console.warn("API key is not set - database will be accessible without authentication");
       }
 
-      // Validate custom path
-      if (!this.customPath || !this.customPath.startsWith("/")) {
-        this.error.customPath = this.$t("common.required") + " - Path must start with /";
-        if (isValidationOk) {
-          this.focusElement("customPath");
-          isValidationOk = false;
+      // Validate custom host if provided
+      if (this.customHost) {
+        // Basic domain validation
+        const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?(\.[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?)*$/;
+        if (!domainRegex.test(this.customHost)) {
+          this.error.customHost = this.$t("settings.invalid_domain");
+          if (isValidationOk) {
+            this.focusElement("customHost");
+            isValidationOk = false;
+          }
+        }
+      } else {
+        // Validate custom path only if no custom host is provided
+        if (!this.customPath || !this.customPath.startsWith("/")) {
+          this.error.customPath = this.$t("common.required") + " - Path must start with /";
+          if (isValidationOk) {
+            this.focusElement("customPath");
+            isValidationOk = false;
+          }
         }
       }
 

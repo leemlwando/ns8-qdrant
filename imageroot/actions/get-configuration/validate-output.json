@@ -3,6 +3,31 @@
     "title": "get-configuration output",
     "$id": "http://schema.nethserver.org/ns8-qdrant/get-configuration-output.json",
     "description": "Get qdrant configuration",
-    "examples": [],
-    "type": "object"
+    "type": "object",
+    "properties": {
+        "ApiKey": {
+            "type": "string",
+            "description": "Qdrant API Key"
+        },
+        "EnableWebUI": {
+            "type": "boolean",
+            "description": "Enable Qdrant Web Console"
+        },
+        "HttpsEnabled": {
+            "type": "boolean",
+            "description": "Enable HTTPS access"
+        },
+        "CustomPath": {
+            "type": "string",
+            "description": "Custom path for accessing Qdrant"
+        },
+        "CustomHost": {
+            "type": "string",
+            "description": "Custom domain for accessing Qdrant"
+        },
+        "LetsEncrypt": {
+            "type": "boolean",
+            "description": "Enable Let's Encrypt SSL certificate"
+        }
+    }
 }

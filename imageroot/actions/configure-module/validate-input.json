@@ -18,11 +18,19 @@
             "type": "boolean", 
             "description": "Enable HTTPS access",
             "default": true
-        },
-        "CustomPath": {
+        },        "CustomPath": {
             "type": "string",
             "description": "Custom path for accessing Qdrant (default: /qdrant)",
             "default": "/qdrant"
+        },
+        "CustomHost": {
+            "type": "string",
+            "description": "Custom domain for accessing Qdrant (e.g., qdrant.mydomain.co.zm)"
+        },
+        "LetsEncrypt": {
+            "type": "boolean",
+            "description": "Enable Let's Encrypt SSL certificate for custom domain",
+            "default": false
         }
     }
 }

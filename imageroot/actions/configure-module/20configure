@@ -16,6 +16,8 @@ api_key = request.get("ApiKey", "")
 enable_web_ui = request.get("EnableWebUI", True)
 https_enabled = request.get("HttpsEnabled", True)
 custom_path = request.get("CustomPath", "/qdrant")
+custom_host = request.get("CustomHost", "")
+lets_encrypt = request.get("LetsEncrypt", False)
 
 # Always create the qdrant.env file
 env_file_path = os.path.join(os.environ["STATE_DIR"], "qdrant.env")
@@ -37,22 +39,30 @@ config = {
     "ApiKey": api_key,
     "EnableWebUI": enable_web_ui,
     "HttpsEnabled": https_enabled,
-    "CustomPath": custom_path
+    "CustomPath": custom_path,
+    "CustomHost": custom_host,
+    "LetsEncrypt": lets_encrypt
 }
 with open(config_file_path, "w") as f:
     json.dump(config, f)
 
-# Configure Traefik to route custom path requests to the qdrant service
+# Configure Traefik to route requests to the qdrant service
+traefik_data = {
+    'instance': os.environ['MODULE_ID'],
+    'url': 'http://127.0.0.1:' + os.environ["TCP_PORT"],
+    'http2https': https_enabled,
+    'lets_encrypt': lets_encrypt,
+}
+
+# Use custom host if provided, otherwise use path-based routing
+if custom_host:
+    traefik_data['host'] = custom_host
+else:
+    traefik_data['path'] = custom_path
 response = agent.tasks.run(
     agent_id=agent.resolve_agent_id('traefik@node'),
     action='set-route',
-    data={
-        'instance': os.environ['MODULE_ID'],
-        'url':  'http://127.0.0.1:' + os.environ["TCP_PORT"],
-        'http2https': https_enabled,
-        'lets_encrypt': https_enabled,
-        'path': custom_path,
-    },
+    data=traefik_data,
 )
 
 # Check if traefik configuration has been successfull

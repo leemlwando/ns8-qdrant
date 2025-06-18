@@ -32,9 +32,16 @@
         "https_enabled_description": "Force HTTPS and enable Let's Encrypt certificate",
         "custom_path": "Access Path",
         "custom_path_description": "Custom URL path for accessing Qdrant (e.g., /qdrant, /database)",
+        "custom_host": "Custom Domain",
+        "custom_host_description": "Custom domain for accessing Qdrant (e.g., qdrant.mydomain.co.zm). Leave empty to use path-based access.",
+        "custom_path_disabled_for_domain": "Custom path is disabled when using a custom domain",
+        "lets_encrypt": "Enable Let's Encrypt SSL",
+        "lets_encrypt_description": "Automatically obtain and manage SSL certificate for the custom domain",
+        "access_configuration": "Access Configuration",
         "access_info": "Access Information",
         "database_url": "Database URL",
-        "console_url": "Web Console URL"
+        "console_url": "Web Console URL",
+        "invalid_domain": "Please enter a valid domain name"
     },
     "about": {
         "title": "About"
