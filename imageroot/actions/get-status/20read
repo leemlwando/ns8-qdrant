@@ -3,15 +3,36 @@
 import json
 import sys
 import subprocess
+import os
 
 status = {
     "qdrant_service_status": "unknown"
 }
 
 try:
-    result = subprocess.run(["systemctl", "--user", "is-active", "qdrant.service"], capture_output=True, text=True)
-    status["qdrant_service_status"] = result.stdout.strip()
+    # Check if the service is active
+    result = subprocess.run(
+        ["systemctl", "--user", "is-active", "qdrant.service"], 
+        capture_output=True, 
+        text=True,
+        timeout=10
+    )
+    
+    service_status = result.stdout.strip()
+    if service_status == "active":
+        status["qdrant_service_status"] = "active"
+    elif service_status == "inactive":
+        status["qdrant_service_status"] = "inactive"
+    elif service_status == "failed":
+        status["qdrant_service_status"] = "failed"
+    else:
+        status["qdrant_service_status"] = service_status or "unknown"
+        
+except subprocess.TimeoutExpired:
+    status["qdrant_service_status"] = "timeout"
 except FileNotFoundError:
     status["qdrant_service_status"] = "systemctl not found"
+except Exception as e:
+    status["qdrant_service_status"] = f"error: {str(e)}"
 
 json.dump(status, fp=sys.stdout)

@@ -25,7 +25,16 @@
         "configure_instance": "Configure {instance}",
         "save": "Save",
         "test_field": "Test field",
-        "api_key": "API Key"
+        "api_key": "API Key",
+        "enable_web_ui": "Enable Web Console",
+        "enable_web_ui_description": "Enable the Qdrant web-based console interface",
+        "https_enabled": "Enable HTTPS",
+        "https_enabled_description": "Force HTTPS and enable Let's Encrypt certificate",
+        "custom_path": "Access Path",
+        "custom_path_description": "Custom URL path for accessing Qdrant (e.g., /qdrant, /database)",
+        "access_info": "Access Information",
+        "database_url": "Database URL",
+        "console_url": "Web Console URL"
     },
     "about": {
         "title": "About"
