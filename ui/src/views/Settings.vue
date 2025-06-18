@@ -68,8 +68,7 @@
                 </template>
               </cv-accordion-item>
             </cv-accordion>
-            
-            <cv-toggle
+              <cv-toggle
               :label="$t('settings.enable_web_ui')"
               v-model="enableWebUI"
               :disabled="loading.getConfiguration || loading.configureModule"
@@ -79,6 +78,18 @@
             </cv-toggle>
             <div class="bx--form__helper-text">
               {{ $t('settings.enable_web_ui_description') }}
+            </div>
+            
+            <cv-toggle
+              :label="$t('settings.enable_jwt_tokens')"
+              v-model="enableJwtTokens"
+              :disabled="loading.getConfiguration || loading.configureModule || !apiKey"
+            >
+              <template slot="text-left">Disabled</template>
+              <template slot="text-right">Enabled</template>
+            </cv-toggle>
+            <div class="bx--form__helper-text">
+              {{ $t('settings.enable_jwt_tokens_description') }}
             </div>
             
             <cv-toggle
@@ -169,6 +180,7 @@ export default {
       },
       urlCheckInterval: null,      apiKey: "",
       enableWebUI: true,
+      enableJwtTokens: true,
       httpsEnabled: true,
       customPath: "/qdrant",
       customHost: "",
@@ -263,11 +275,11 @@ export default {
       console.error(`${taskContext.action} aborted`, taskResult);
       this.error.getConfiguration = this.$t("error.generic_error");
       this.loading.getConfiguration = false;
-    },
-    getConfigurationCompleted(taskContext, taskResult) {
+    },    getConfigurationCompleted(taskContext, taskResult) {
       this.loading.getConfiguration = false;
       const config = taskResult.output;      this.apiKey = config.ApiKey || "";
       this.enableWebUI = config.EnableWebUI !== undefined ? config.EnableWebUI : true;
+      this.enableJwtTokens = config.EnableJwtTokens !== undefined ? config.EnableJwtTokens : true;
       this.httpsEnabled = config.HttpsEnabled !== undefined ? config.HttpsEnabled : true;
       this.customPath = config.CustomPath || "/qdrant";
       this.customHost = config.CustomHost || "";
@@ -312,6 +324,7 @@ export default {
           action: taskAction,          data: {
             ApiKey: this.apiKey,
             EnableWebUI: this.enableWebUI,
+            EnableJwtTokens: this.enableJwtTokens,
             HttpsEnabled: this.httpsEnabled,
             CustomPath: this.customPath,
             CustomHost: this.customHost,

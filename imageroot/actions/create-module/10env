@@ -10,6 +10,7 @@ import agent
 # Set default environment variables for new module instances
 agent.set_env('QDRANT_API_KEY', '')
 agent.set_env('QDRANT_ENABLE_WEB_UI', 'true')
+agent.set_env('QDRANT_ENABLE_JWT_TOKENS', 'true')
 agent.set_env('QDRANT_HTTPS_ENABLED', 'true')
 agent.set_env('QDRANT_CUSTOM_PATH', '/qdrant')
 agent.set_env('QDRANT_CUSTOM_HOST', '')

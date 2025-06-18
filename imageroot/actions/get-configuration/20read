@@ -13,6 +13,7 @@ import os
 config = {
     "ApiKey": os.getenv("QDRANT_API_KEY", ""),
     "EnableWebUI": os.getenv("QDRANT_ENABLE_WEB_UI", "true").lower() in ('true', '1', 't'),
+    "EnableJwtTokens": os.getenv("QDRANT_ENABLE_JWT_TOKENS", "true").lower() in ('true', '1', 't'),
     "HttpsEnabled": os.getenv("QDRANT_HTTPS_ENABLED", "true").lower() in ('true', '1', 't'),
     "CustomPath": os.getenv("QDRANT_CUSTOM_PATH", "/qdrant"),
     "CustomHost": os.getenv("QDRANT_CUSTOM_HOST", ""),

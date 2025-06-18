@@ -8,17 +8,21 @@
         "ApiKey": {
             "type": "string",
             "description": "Qdrant API Key"
-        },
-        "EnableWebUI": {
+        },        "EnableWebUI": {
             "type": "boolean",
             "description": "Enable Qdrant Web Console",
+            "default": true
+        },
+        "EnableJwtTokens": {
+            "type": "boolean",
+            "description": "Enable JWT token support for third-party integrations",
             "default": true
         },
         "HttpsEnabled": {
             "type": "boolean", 
             "description": "Enable HTTPS access",
             "default": true
-        },        "CustomPath": {
+        },"CustomPath": {
             "type": "string",
             "description": "Custom path for accessing Qdrant (default: /qdrant)",
             "default": "/qdrant"

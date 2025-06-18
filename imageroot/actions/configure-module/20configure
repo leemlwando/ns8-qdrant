@@ -14,6 +14,7 @@ import os
 request = json.load(sys.stdin)
 api_key = request.get("ApiKey", "")
 enable_web_ui = request.get("EnableWebUI", True)
+enable_jwt_tokens = request.get("EnableJwtTokens", True)
 https_enabled = request.get("HttpsEnabled", True)
 custom_path = request.get("CustomPath", "/qdrant")
 custom_host = request.get("CustomHost", "")
@@ -22,6 +23,7 @@ lets_encrypt = request.get("LetsEncrypt", False)
 # Set environment variables for configuration (NS8 best practice)
 agent.set_env("QDRANT_API_KEY", api_key)
 agent.set_env("QDRANT_ENABLE_WEB_UI", str(enable_web_ui).lower())
+agent.set_env("QDRANT_ENABLE_JWT_TOKENS", str(enable_jwt_tokens).lower())
 agent.set_env("QDRANT_HTTPS_ENABLED", str(https_enabled).lower())
 agent.set_env("QDRANT_CUSTOM_PATH", custom_path)
 agent.set_env("QDRANT_CUSTOM_HOST", custom_host)
@@ -31,12 +33,22 @@ agent.set_env("QDRANT_LETS_ENCRYPT", str(lets_encrypt).lower())
 qdrant_env = {}
 if api_key:
     qdrant_env["QDRANT__SERVICE__API_KEY"] = api_key
+    
+# Enable JWT token support for third-party integrations if requested
+if enable_jwt_tokens and api_key:
+    qdrant_env["QDRANT__SERVICE__JWT_RBAC"] = "true"
+    qdrant_env["QDRANT__SERVICE__ENABLE_TLS"] = "false"  # TLS handled by Traefik
+    qdrant_env["QDRANT__SERVICE__VERIFY_TLS"] = "false"  # TLS handled by Traefik
 
 # Configure web UI
 if enable_web_ui:
     qdrant_env["QDRANT__WEB_UI__ENABLED"] = "true"
 else:
     qdrant_env["QDRANT__WEB_UI__ENABLED"] = "false"
+
+# Enable access token management API
+qdrant_env["QDRANT__SERVICE__HTTP_PORT"] = "6333"
+qdrant_env["QDRANT__SERVICE__GRPC_PORT"] = "6334"
 
 agent.write_envfile("qdrant.env", qdrant_env)
 

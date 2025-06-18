@@ -8,10 +8,13 @@
         "ApiKey": {
             "type": "string",
             "description": "Qdrant API Key"
-        },
-        "EnableWebUI": {
+        },        "EnableWebUI": {
             "type": "boolean",
             "description": "Enable Qdrant Web Console"
+        },
+        "EnableJwtTokens": {
+            "type": "boolean",
+            "description": "Enable JWT token support for third-party integrations"
         },
         "HttpsEnabled": {
             "type": "boolean",
