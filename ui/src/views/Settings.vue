@@ -322,10 +322,15 @@ export default {
       this.clearErrors(this);
       let isValidationOk = true;
 
+      // Validate API key (optional but show warning)
+      if (!this.apiKey) {
+        // API key is optional but recommended
+        console.warn("API key is not set - database will be accessible without authentication");
+      }
+
       // Validate custom path
       if (!this.customPath || !this.customPath.startsWith("/")) {
-        this.error.customPath = this.$t("common.required");
-
+        this.error.customPath = this.$t("common.required") + " - Path must start with /";
         if (isValidationOk) {
           this.focusElement("customPath");
           isValidationOk = false;

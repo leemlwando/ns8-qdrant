@@ -7,9 +7,10 @@
 
 import json
 import sys
-import os
 import agent
+import os
 
+# Read configuration from stored state
 config = {
     "ApiKey": "",
     "EnableWebUI": True,
@@ -17,20 +18,14 @@ config = {
     "CustomPath": "/qdrant"
 }
 
+# Try to read from config file
 try:
-    # Try to read from config file first
-    config_file_path = os.path.join(os.environ["STATE_DIR"], "config.json")
+    config_file_path = os.path.join(os.environ.get("STATE_DIR", "."), "config.json")
     with open(config_file_path, "r") as f:
         stored_config = json.load(f)
         config.update(stored_config)
 except FileNotFoundError:
-    # Fallback to reading from environment file for API key
-    try:
-        with open(os.path.join(os.environ["STATE_DIR"], "qdrant.env"), "r") as f:
-            for line in f:
-                if line.startswith("QDRANT__SERVICE__API_KEY="):
-                    config["ApiKey"] = line.strip().split("=", 1)[1]
-    except FileNotFoundError:
-        pass
+    # Use defaults if no config file exists
+    pass
 
 json.dump(config, fp=sys.stdout)
